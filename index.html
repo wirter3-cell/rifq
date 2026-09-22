@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F4FAFD">
+<meta name="color-scheme" content="light only">
 <title>رِفق | RIFQ</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%233E8FC4'/%3E%3Ccircle cx='24' cy='16.5' r='5' fill='white'/%3E%3Cpath d='M12 23.5c1.6 7 6.3 11 12 11s10.4-4 12-11' fill='none' stroke='white' stroke-width='4.2' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,21 +38,7 @@ window.RIFQ_FIREBASE_CONFIG = {
   --map-bg:#EAF5FC; --map-line:#CFE5F3; --map-text:#7690A6; --halo:#FFFFFF;
   --hero-a:#183B56; --hero-b:#265F8A;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0D1C29; --card:#132737; --ink:#E7F2FA; --ink-2:#B8CCDC; --muted:#8AA3B8; --line:#21405A; --field:#0F2231;
-    --primary-50:#122F46; --primary-100:#17405F; --primary-700:#9FD3F4;
-    --danger-50:#3A1E24; --success-50:#123829; --warning-50:#3A2A17;
-    --shadow:none; --map-bg:#10263A; --map-line:#1E3C56; --map-text:#8AA3B8; --halo:#10263A;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0D1C29; --card:#132737; --ink:#E7F2FA; --ink-2:#B8CCDC; --muted:#8AA3B8; --line:#21405A; --field:#0F2231;
-  --primary-50:#122F46; --primary-100:#17405F; --primary-700:#9FD3F4;
-  --danger-50:#3A1E24; --success-50:#123829; --warning-50:#3A2A17;
-  --shadow:none; --map-bg:#10263A; --map-line:#1E3C56; --map-text:#8AA3B8; --halo:#10263A;
-}
-:root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+:root{ color-scheme:light; box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
 *,*::before,*::after{ box-sizing:inherit; }
 html{ height:100%; scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%; }
 body{ margin:0; min-height:100%; background:var(--bg); color:var(--ink);
@@ -220,14 +207,18 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 
 /* map */
 .mapbox{ border-radius:22px; overflow:hidden; border:1px solid var(--line); background:var(--map-bg); position:relative; }
-.mapbox svg{ display:block; width:100%; height:auto; }
+.mapbox > svg{ display:block; width:100%; height:auto; }
 .lmap{ aspect-ratio:1/1; } .lmap .leaflet-container{ width:100%; height:100%; font-family:inherit; background:var(--map-bg); }
 .m-bg{ fill:var(--map-bg); } .m-line{ stroke:var(--map-line); fill:none; } .m-txt{ fill:var(--map-text); font-family:inherit; }
 .m-lbl{ fill:var(--ink); font-weight:700; paint-order:stroke; stroke:var(--halo); stroke-linejoin:round; } .m-pt{ cursor:pointer; }
 .leaflet-tooltip.rq-tip{ font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; font-weight:600; font-size:13px; background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:2px 9px; box-shadow:0 4px 12px rgba(24,59,86,.12); }
 .leaflet-tooltip.rq-tip::before{ display:none; }
 .rq-ring{ display:block; width:44px; height:44px; border-radius:50%; border:3px solid #E5484D; animation:ring 1.6s ease-out infinite; }
-.mapfit{ position:absolute; z-index:500; bottom:12px; left:12px; }
+.mapfit{ position:absolute; z-index:500; bottom:12px; left:12px; box-shadow:0 4px 14px rgba(24,59,86,.15); }
+.mapfit svg{ width:18px; height:18px; }
+.leaflet-tooltip.rq-tip.zone{ background:#1F9D68; color:#fff; border:none; }
+.range{ width:100%; accent-color:var(--primary-600); height:32px; }
+.nav{ box-shadow:0 -6px 24px rgba(24,59,86,.06); }
 
 /* nav */
 .nav{ position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); z-index:20; }
@@ -422,7 +413,7 @@ const S = {
   group:null, groups:[], groupsLoaded:false, selGroupId:LS.get('rifq_sel_group', null), scopeId:undefined,
   members:[], alerts:[], seen:null,
   fix:null, geoErr:null, tracking:false, trackTried:false, wake:false,
-  draft:{}, authMode:'login', alertFilter:'open', busy:{}, wiz:null, editing:null, trails:{}
+  draft:{}, authMode:'login', alertFilter:'open', busy:{}, wiz:null, editing:null, trails:{}, zoneEdit:null, zoneOut:null
 };
 const subs = {};
 function unsub(k){ if (subs[k]){ try{ subs[k](); }catch(e){} subs[k] = null; } }
@@ -441,6 +432,7 @@ function onField(e){
   const t = e.target; if (!t || !t.dataset) return;
   if (t.dataset.draft) S.draft[t.dataset.draft] = t.value;
   if (t.dataset.w && S.wiz) S.wiz[t.dataset.w] = t.value;
+  if (t.dataset.z && S.zoneEdit){ S.zoneEdit[t.dataset.z] = t.dataset.z === 'r' ? Number(t.value) : t.value; if (t.dataset.z === 'r') updateZonePreview(); }
 }
 document.addEventListener('input', onField);
 document.addEventListener('change', onField);
@@ -518,6 +510,12 @@ function trackTrails(list){
     if (!last || last[0] !== m.lat || last[1] !== m.lng){ t.push([m.lat, m.lng]); if (t.length > 40) t.shift(); }
   }
 }
+const zonesOf = g => (g && Array.isArray(g.zones)) ? g.zones : [];
+function isOutside(m, g){
+  const zs = zonesOf(g);
+  if (!zs.length || !hasLoc(m)) return false;
+  return zs.every(z => distM(m, z) > z.r + 10);
+}
 const selGroup = () => S.groups.find(g => g.id === S.selGroupId) || null;
 
 function incoming(list){
@@ -528,11 +526,12 @@ function incoming(list){
   if (!hit) return;
   vibrate([300, 120, 300, 120, 300]); beep();
   if (document.hidden && 'Notification' in window && Notification.permission === 'granted'){
-    try{ new Notification('🚨 بلاغ طوارئ — رِفق', { body:`${hit.userName} يحتاج مساعدة`, tag:hit.id, requireInteraction:true }); }catch(e){}
+    try{ new Notification(hit.type === 'zone' ? '⚠️ خارج النطاق — رِفق' : '🚨 بلاغ طوارئ — رِفق', { body:hit.type === 'zone' ? `${hit.userName} خرج من «${hit.zoneName}»` : `${hit.userName} يحتاج مساعدة`, tag:hit.id, requireInteraction:true }); }catch(e){}
   }
-  openModal(`<div class="bigicon danger">${I('alert')}</div>
-    <h2 style="font-size:22px">بلاغ طوارئ جديد</h2>
-    <p style="margin:8px 0 4px"><b>${esc(hit.userName)}</b> يطلب المساعدة — ${esc(ago(hit.createdAt))}</p>
+  const zone = hit.type === 'zone';
+  openModal(`<div class="bigicon ${zone ? 'warning' : 'danger'}">${I(zone ? 'flag' : 'alert')}</div>
+    <h2 style="font-size:22px">${zone ? 'مسافر خارج النطاق' : 'بلاغ طوارئ جديد'}</h2>
+    <p style="margin:8px 0 4px"><b>${esc(hit.userName)}</b> ${zone ? `خرج من منطقة «${esc(hit.zoneName || '')}»` : 'يطلب المساعدة'} — ${esc(ago(hit.createdAt))}</p>
     <p class="muted sm" style="margin:0 0 18px">${hit.lat != null ? 'الموقع مرفق مع البلاغ.' : 'لم يُرفق موقع مع البلاغ.'}</p>
     <div class="grid2"><button class="btn ghost" data-act="close">لاحقًا</button><button class="btn danger" data-act="gotoAlerts">عرض البلاغ</button></div>`, { center:true });
 }
@@ -547,7 +546,7 @@ function startTracking(){
   S.tracking = true;
   watchId = navigator.geolocation.watchPosition(p => {
     S.fix = { lat:p.coords.latitude, lng:p.coords.longitude, acc:Math.round(p.coords.accuracy || 0), t:Date.now() };
-    S.geoErr = null; push(false); scheduleRender();
+    S.geoErr = null; checkZones(S.fix); push(false); scheduleRender();
   }, err => {
     if (err && err.code === 1){
       S.geoErr = 'denied'; S.tracking = false;
@@ -567,6 +566,31 @@ function stopTracking(persist){
   const was = S.tracking; S.tracking = false; lastPushed = null;
   if (persist && was && S.user) db.doc('members/' + S.user.uid).update({ sharing:false, updatedAt:Date.now() }).catch(() => {});
   scheduleRender();
+}
+let outStreak = 0, inStreak = 0, zoneWriting = false;
+function checkZones(f){
+  const zs = zonesOf(S.group);
+  if (!f || !zs.length || !S.me || !S.me.groupId){ S.zoneOut = null; return; }
+  let best = null;
+  for (const z of zs){ const d = distM(f, z) - z.r; if (!best || d < best.d) best = { z, d }; }
+  const margin = Math.max(15, Math.min(f.acc || 0, 60)), out = best.d > margin;
+  S.zoneOut = out ? { name:best.z.name, d:Math.round(best.d) } : null;
+  if (out){ outStreak++; inStreak = 0; } else { inStreak++; outStreak = 0; }
+  const wasOut = !!S.me.outside;
+  if (zoneWriting) return;
+  if (out && !wasOut && outStreak >= 2){
+    zoneWriting = true; vibrate([400, 150, 400]);
+    toast(`أنت خارج منطقة «${best.z.name}» — تم إشعار المشرف`);
+    const now = Date.now();
+    Promise.all([
+      meRef().update({ outside:true, outsideAt:now }),
+      db.collection('alerts').add({ type:'zone', groupId:S.me.groupId, userId:S.user.uid, userName:S.me.name, userPhone:S.me.phone || '',
+        lat:f.lat, lng:f.lng, acc:f.acc || null, zoneName:best.z.name, dist:Math.round(best.d), createdAt:now, status:'open' })
+    ]).catch(e => console.warn('zone', e)).finally(() => { zoneWriting = false; });
+  } else if (!out && wasOut && inStreak >= 2){
+    zoneWriting = true;
+    meRef().update({ outside:false }).catch(() => {}).finally(() => { zoneWriting = false; });
+  }
 }
 async function push(force){
   if (!S.fix || !S.user || !S.tracking || pushing) return;
@@ -612,15 +636,30 @@ function mapSVG(pts, opts){
 }
 const LM = { el:null, map:null, layer:null, key:null, pts:[], req:null };
 function liveMap(pts, opts){
-  if (!pts.length || !window.L) return mapSVG(pts, opts);
-  LM.req = { pts, opts:opts || {} };
+  opts = opts || {};
+  const hasZones = (opts.zones && opts.zones.length) || opts.edit;
+  if (!window.L || (!pts.length && !hasZones)) return mapSVG(pts, opts);
+  LM.req = { pts, opts };
   return `<div class="mapbox lmap" id="map-slot"><button class="btn sm mapfit" data-act="fitMap" style="background:var(--card);color:var(--ink);border:1px solid var(--line)">${I('target')}عرض الكل</button></div>`;
 }
 function fitMap(){
-  const m = LM.map, pts = LM.pts; if (!m || !pts.length) return;
-  if (pts.length === 1) m.setView([pts[0].lat, pts[0].lng], 17);
-  else m.fitBounds(L.latLngBounds(pts.map(p => [p.lat, p.lng])), { padding:[48, 48], maxZoom:17 });
+  const m = LM.map; if (!m) return;
+  if (LM.editCircle){ m.fitBounds(LM.editCircle.getBounds(), { padding:[30, 30] }); return; }
+  let b = null;
+  const add = x => { b = b ? b.extend(x) : L.latLngBounds(x, x); };
+  LM.pts.forEach(p => add(L.latLng(p.lat, p.lng)));
+  (LM.zones || []).forEach(z => { const c = L.circle([z.lat, z.lng], { radius:z.r }); c.addTo(m); const zb = c.getBounds(); m.removeLayer(c); b = b ? b.extend(zb) : zb; });
+  if (!b) return;
+  if (LM.pts.length === 1 && !(LM.zones || []).length) m.setView([LM.pts[0].lat, LM.pts[0].lng], 17);
+  else m.fitBounds(b, { padding:[40, 40], maxZoom:17 });
 }
+function updateZonePreview(){
+  const z = S.zoneEdit; if (!z) return;
+  const lab = document.getElementById('z-r'); if (lab) lab.textContent = fmtDist(z.r);
+  if (LM.editCircle){ LM.editCircle.setLatLng([z.lat, z.lng]); LM.editCircle.setRadius(z.r); }
+  if (LM.editDot) LM.editDot.setLatLng([z.lat, z.lng]);
+}
+const fmtDist = m => m >= 1000 ? `${(m / 1000).toFixed(m % 1000 ? 1 : 0)} كم` : `${Math.round(m)} م`;
 function mountMap(){
   const slot = document.getElementById('map-slot');
   if (!slot || !LM.req || !window.L) return;
@@ -629,10 +668,22 @@ function mountMap(){
   slot.appendChild(LM.el);
   if (!LM.map){
     LM.map = L.map(LM.el, { zoomControl:true }).setView([HARAM.lat, HARAM.lng], 15);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19, subdomains:'abcd', attribution:'&copy; OpenStreetMap &copy; CARTO' }).addTo(LM.map);
+    LM.map.attributionControl.setPrefix(false);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap' }).addTo(LM.map);
     LM.layer = L.layerGroup().addTo(LM.map);
+    LM.map.on('click', e => { if (S.zoneEdit){ S.zoneEdit.lat = e.latlng.lat; S.zoneEdit.lng = e.latlng.lng; updateZonePreview(); } });
   }
-  LM.map.invalidateSize(); LM.layer.clearLayers(); LM.pts = pts;
+  LM.map.invalidateSize(); LM.layer.clearLayers(); LM.pts = pts; LM.editCircle = null; LM.editDot = null;
+  const edit = opts.edit;
+  LM.zones = (opts.zones || []).filter(z => !edit || z.id !== edit.id);
+  for (const z of LM.zones){
+    L.circle([z.lat, z.lng], { radius:z.r, color:'#1F9D68', weight:2, dashArray:'6 6', fillColor:'#1F9D68', fillOpacity:.08, interactive:false }).addTo(LM.layer)
+      .bindTooltip(esc(z.name), { permanent:true, direction:'center', className:'rq-tip zone' });
+  }
+  if (edit){
+    LM.editCircle = L.circle([edit.lat, edit.lng], { radius:edit.r, color:'#3E8FC4', weight:3, fillColor:'#64B5E8', fillOpacity:.18, interactive:false }).addTo(LM.layer);
+    LM.editDot = L.circleMarker([edit.lat, edit.lng], { radius:7, color:'#fff', weight:3, fillColor:'#3E8FC4', fillOpacity:1, interactive:false }).addTo(LM.layer);
+  }
   for (const p of pts) if (p.trail && p.trail.length > 1) L.polyline(p.trail, { color:p.color, weight:4, opacity:.55, dashArray:'1 9', lineCap:'round' }).addTo(LM.layer);
   for (const p of pts.slice().sort((a, b) => (a.z || 0) - (b.z || 0))){
     if (p.acc) L.circle([p.lat, p.lng], { radius:p.acc, color:'#64B5E8', weight:1, fillColor:'#64B5E8', fillOpacity:.15 }).addTo(LM.layer);
@@ -641,7 +692,7 @@ function mountMap(){
     if (p.label) mk.bindTooltip(esc(p.label), { permanent:true, direction:'top', offset:[0, -11], className:'rq-tip' });
     if (p.act) mk.on('click', () => A[p.act]({ id:p.id }));
   }
-  if (opts.follow){
+  if (opts.follow && pts.length){
     if (LM.key !== opts.key){ LM.key = opts.key; LM.map.setView([pts[0].lat, pts[0].lng], 17); }
     else LM.map.panTo([pts[0].lat, pts[0].lng], { animate:true });
   } else if (LM.key !== opts.key){ LM.key = opts.key; setTimeout(fitMap, 60); }
@@ -909,6 +960,7 @@ function vTHome(){
           <div class="grow"><h2>${status.title}</h2><p class="muted sm">${esc(status.sub)}</p></div>
           <button class="switch" role="switch" aria-checked="${S.tracking}" aria-label="مشاركة الموقع" data-act="toggleTrack"></button></div>
         ${geoHelp()}
+        ${S.zoneOut ? `<div class="banner warn">${I('flag')}<div><b>أنت خارج منطقة «${esc(S.zoneOut.name)}»</b> بحوالي ${fmtDist(S.zoneOut.d)}. ارجع للمنطقة أو تواصل مع المشرف.</div></div>` : ''}
         ${S.tracking && f ? `<p class="xs muted">${S.wake ? 'الشاشة ستبقى مضاءة. ' : ''}أبقِ الصفحة مفتوحة ليستمر إرسال موقعك.</p>` : ''}
       </div>
       ${!me.groupId ? `<div class="card stack"><div class="row"><div class="ib">${I('users')}</div><div class="grow"><h2>انضم لمجموعتك</h2><p class="muted sm">أدخل الرمز من المشرف</p></div></div>
@@ -927,7 +979,8 @@ function vTLoc(){
   const pts = lat != null ? [{ id:'me', lat, lng, acc:f && f.acc, label:'أنا', color:'#3E8FC4' }] : [];
   return `<h1>موقعي</h1><p class="muted" style="margin:2px 0 14px">هذا ما يراه مشرف مجموعتك</p>
     ${geoHelp() ? `<div style="margin-bottom:12px">${geoHelp()}</div>` : ''}
-    ${liveMap(pts, { key:'me', follow:true, empty:S.tracking ? 'بانتظار إشارة GPS…' : 'شغّل مشاركة الموقع من الرئيسية' })}
+    ${S.zoneOut ? `<div class="banner warn" style="margin-bottom:12px">${I('flag')}<div>أنت خارج منطقة «${esc(S.zoneOut.name)}» بحوالي ${fmtDist(S.zoneOut.d)}</div></div>` : ''}
+    ${liveMap(pts, { key:'me', follow:true, zones:zonesOf(S.group), empty:S.tracking ? 'بانتظار إشارة GPS…' : 'شغّل مشاركة الموقع من الرئيسية' })}
     <div class="card list" style="margin-top:12px">
       <div class="li row between"><span class="muted">الحالة</span><span class="chip dot ${S.tracking ? 'success' : 'muted'}">${S.tracking ? 'مباشر' : 'متوقف'}</span></div>
       <div class="li row between"><span class="muted">آخر تحديث</span><b>${esc(ago(upd))}</b></div>
@@ -978,8 +1031,14 @@ function sHeader(title){
   return `<div class="row between" style="margin-bottom:14px">${brand()}<div class="row" style="gap:8px">${S.groups.length > 1 ? `<button class="btn ghost sm" data-act="tab" data-v="group">${I('users')}${esc(g ? g.name : '')}</button>` : ''}<button class="iconbtn" data-act="logout" aria-label="تسجيل الخروج">${I('out')}</button></div></div>
     <h1 style="margin-bottom:14px">${title}</h1>`;
 }
+function memberState(m, alert){
+  if (alert) return ['يحتاج مساعدة', 'danger', '#E5484D', 0];
+  if (isOutside(m, selGroup())) return ['خارج النطاق', 'warning', '#D9771A', 1];
+  if (isOnline(m)) return ['متصل', 'success', '#3E8FC4', 3];
+  return ['غير متصل', 'muted', '#8AA3B8', 2];
+}
 function memberRow(m, alert){
-  const st = alert ? ['يحتاج مساعدة', 'danger'] : isOnline(m) ? ['متصل', 'success'] : ['غير متصل', 'muted'];
+  const st = memberState(m, alert);
   return `<div class="card tap row${alert ? ' alert' : ''}" style="padding:14px" data-act="member" data-id="${esc(m.id)}" tabindex="0">
     ${avatar(m, alert)}
     <div class="grow"><div style="font-weight:600">${esc(m.name)}</div><div class="muted xs">${hasLoc(m) ? `الموقع: ${esc(ago(m.locAt))}` : 'لم يشارك موقعه بعد'}</div></div>
@@ -988,13 +1047,13 @@ function memberRow(m, alert){
 function vSDash(){
   const g = selGroup(); if (!g) return sHeader('الرئيسية') + noGroup();
   const ms = S.members, online = ms.filter(isOnline).length;
-  const open = S.alerts.filter(a => a.status === 'open'), alertIds = new Set(open.map(a => a.userId));
-  const rank = m => alertIds.has(m.id) ? 0 : isOnline(m) ? 2 : 1;
+  const open = S.alerts.filter(a => a.status === 'open'), alertIds = new Set(open.filter(a => a.type !== 'zone').map(a => a.userId));
+  const rank = m => memberState(m, alertIds.has(m.id))[3];
   const list = ms.slice().sort((a, b) => rank(a) - rank(b));
   const notif = ('Notification' in window && Notification.permission === 'default')
     ? `<div class="card row"><div class="ib">${I('bell')}</div><div class="grow"><h3>إشعارات الطوارئ</h3><p class="muted xs">تنبيه حتى لو كنت في تبويب آخر</p></div><button class="btn sm" data-act="enableNotif">تفعيل</button></div>` : '';
   return sHeader(esc(g.name)) + `<div class="stack">
-    ${open.length ? `<div class="card tap row alert" style="background:var(--danger-50)" data-act="gotoAlerts" tabindex="0"><div class="ib danger" style="background:var(--card)">${I('alert')}</div><div class="grow" style="color:var(--danger)"><h2>${open.length === 1 ? `${esc(open[0].userName)} يحتاج مساعدة` : `${open.length} بلاغات طوارئ`}</h2><p class="sm">اضغط لعرض الموقع والتفاصيل</p></div><span style="color:var(--danger)">${I('chev', 'width:20px;height:20px')}</span></div>` : ''}
+    ${open.length ? `<div class="card tap row alert" style="background:var(--danger-50)" data-act="gotoAlerts" tabindex="0"><div class="ib danger" style="background:var(--card)">${I('alert')}</div><div class="grow" style="color:var(--danger)"><h2>${open.length === 1 ? (open[0].type === 'zone' ? `${esc(open[0].userName)} خارج النطاق` : `${esc(open[0].userName)} يحتاج مساعدة`) : `${open.length} تنبيهات مفتوحة`}</h2><p class="sm">اضغط لعرض الموقع والتفاصيل</p></div><span style="color:var(--danger)">${I('chev', 'width:20px;height:20px')}</span></div>` : ''}
     <div class="grid3">
       <div class="card stat"><div class="v">${ms.length}</div><div class="k">الأعضاء</div></div>
       <div class="card stat"><div class="v" style="color:var(--success)">${online}</div><div class="k">متصلون</div></div>
@@ -1017,17 +1076,29 @@ function inviteCard(g){
 const addRow = () => `<div class="grid2"><button class="btn" data-act="scanQr">${I('qr')}مسح باركود</button><button class="btn ghost" data-act="copyInvite">${I('copy')}رسالة الدعوة</button></div>`;
 function vSMap(){
   const g = selGroup(); if (!g) return sHeader('الخريطة') + noGroup();
-  const open = S.alerts.filter(a => a.status === 'open'), alertIds = new Set(open.map(a => a.userId));
-  const located = S.members.filter(hasLoc);
-  const pts = located.map(m => ({ id:m.id, lat:m.lat, lng:m.lng, label:first(m.name), act:'member', z:alertIds.has(m.id) ? 2 : 1,
-    color:alertIds.has(m.id) ? '#E5484D' : isOnline(m) ? '#3E8FC4' : '#D9771A', pulse:alertIds.has(m.id), trail:S.trails[m.id] }));
-  open.filter(a => a.lat != null).forEach(a => pts.push({ id:a.userId, lat:a.lat, lng:a.lng, label:'SOS ' + first(a.userName), act:'member', color:'#E5484D', pulse:true, z:3 }));
+  const open = S.alerts.filter(a => a.status === 'open'), alertIds = new Set(open.filter(a => a.type !== 'zone').map(a => a.userId));
+  const located = S.members.filter(hasLoc), zones = zonesOf(g), ze = S.zoneEdit;
+  const pts = located.map(m => { const st = memberState(m, alertIds.has(m.id)); return { id:m.id, lat:m.lat, lng:m.lng, label:first(m.name), act:ze ? null : 'member', z:3 - st[3], color:st[2], pulse:st[3] <= 1, trail:S.trails[m.id] }; });
+  if (!ze) open.filter(a => a.lat != null && a.type !== 'zone').forEach(a => pts.push({ id:a.userId, lat:a.lat, lng:a.lng, label:'SOS ' + first(a.userName), act:'member', color:'#E5484D', pulse:true, z:5 }));
   const liveN = S.members.filter(isOnline).length;
+  const editor = ze ? `<div class="card stack" style="margin-bottom:12px;border-color:var(--primary)">
+      <div class="row"><div class="ib">${I('flag')}</div><div class="grow"><h2>${ze.id ? 'تعديل المنطقة' : 'منطقة آمنة جديدة'}</h2><p class="muted sm">اضغط على الخريطة لتحديد مركز المنطقة</p></div></div>
+      ${field('اسم المكان', `<input class="in" data-z="name" value="${esc(ze.name)}" placeholder="مثال: مخيم منى — المربع 12">`)}
+      <div><div class="row between" style="margin-bottom:4px"><span class="ink2 sm" style="font-weight:500">نطاق المنطقة</span><b id="z-r">${fmtDist(ze.r)}</b></div>
+        <input type="range" class="range" min="50" max="3000" step="25" data-z="r" value="${ze.r}" aria-label="نطاق المنطقة"></div>
+      <button class="btn ghost sm block" data-act="zoneHere">${I('target')}استخدم موقعي الحالي كمركز</button>
+      <div class="grid2"><button class="btn ghost" data-act="zoneCancel">إلغاء</button><button class="btn" data-act="zoneSave">حفظ المنطقة</button></div>
+    </div>` : '';
+  const zoneList = ze ? '' : `<div class="section-title"><h2>المناطق الآمنة</h2><button class="btn soft sm" data-act="zoneNew">${I('plus')}إضافة منطقة</button></div>
+    ${zones.length ? `<div class="card list">${zones.map(z => { const out = S.members.filter(m => hasLoc(m) && distM(m, z) > z.r + 10).length; return `<div class="li row"><div class="ib sm success">${I('flag')}</div><div class="grow"><div style="font-weight:600">${esc(z.name)}</div><div class="muted xs">نطاق ${fmtDist(z.r)}${S.members.length ? ` · ${out ? `<span style="color:var(--warning);font-weight:600">${out} خارجها</span>` : 'الجميع بالداخل'}` : ''}</div></div><button class="iconbtn" data-act="zoneEditStart" data-id="${esc(z.id)}" aria-label="تعديل">${I('edit')}</button><button class="iconbtn" style="color:var(--danger)" data-act="zoneDelete" data-id="${esc(z.id)}" aria-label="حذف">${I('x')}</button></div>`; }).join('')}</div>`
+      : `<div class="card"><p class="ink2">حدّد مكان تجمّع المجموعة (فندق، مخيم، ساحة…). إذا خرج أي مسافر من كل المناطق المحددة، يصلك تنبيه فوري.</p></div>`}`;
   return sHeader('الخريطة') + `
-    ${liveN ? `<div class="banner info" style="margin-bottom:12px;align-items:center"><span class="livedot"></span><div>بث مباشر — تتحدّث المواقع تلقائيًا عند تحرّك ${liveN === 1 ? 'المسافر' : `${liveN} مسافرين`}</div></div>` : ''}
-    <div class="row wrap" style="gap:8px;margin-bottom:12px"><span class="chip dot primary">متصل</span><span class="chip dot warning">غير متصل</span><span class="chip dot danger">طوارئ</span><span class="muted sm" style="margin-inline-start:auto">${located.length} من ${S.members.length}</span></div>
-    ${liveMap(pts, { key:'group:' + g.id, empty:'ستظهر مواقع الأعضاء هنا فور مشاركتها' })}
-    <p class="muted sm" style="margin:10px 2px 0">اضغط على أي نقطة لعرض بيانات العضو.</p>`;
+    ${liveN && !ze ? `<div class="banner info" style="margin-bottom:12px;align-items:center"><span class="livedot"></span><div>بث مباشر — تتحدّث المواقع تلقائيًا عند تحرّك ${liveN === 1 ? 'المسافر' : `${liveN} مسافرين`}</div></div>` : ''}
+    ${editor}
+    ${ze ? '' : `<div class="row wrap" style="gap:8px;margin-bottom:12px"><span class="chip dot primary">متصل</span><span class="chip dot warning">خارج النطاق</span><span class="chip dot muted">غير متصل</span><span class="chip dot danger">طوارئ</span></div>`}
+    ${liveMap(pts, { key:ze ? 'zone:' + (ze.id || 'new') : 'group:' + g.id, zones, edit:ze, empty:'ستظهر مواقع الأعضاء هنا فور مشاركتها' })}
+    ${ze ? '' : `<p class="muted sm" style="margin:10px 2px 0">اضغط على أي نقطة لعرض بيانات العضو.</p>`}
+    ${zoneList}`;
 }
 function vSAlerts(){
   const g = selGroup(); if (!g) return sHeader('البلاغات') + noGroup();
@@ -1037,12 +1108,12 @@ function vSAlerts(){
     ${shown.length ? `<div class="stack">${shown.map(alertCard).join('')}</div>` : center(`<div class="ib success" style="width:80px;height:80px;border-radius:50%;margin:0 auto 12px">${I('check', 'width:36px;height:36px')}</div><h2>${S.alertFilter === 'open' ? 'لا توجد بلاغات مفتوحة' : 'لا توجد بلاغات بعد'}</h2><p class="muted">ستظهر هنا فور ضغط أي عضو على زر الطوارئ.</p>`)}`;
 }
 function alertCard(a){
-  const open = a.status === 'open', m = S.members.find(x => x.id === a.userId);
+  const open = a.status === 'open', m = S.members.find(x => x.id === a.userId), zone = a.type === 'zone';
   return `<div class="card stack${open ? ' alert' : ''}">
-    <div class="row"><div class="ib ${open ? 'danger' : 'success'}">${I(open ? 'alert' : 'check')}</div>
-      <div class="grow"><h2>${esc(a.userName)}</h2><p class="muted sm">${esc(fmtDT(a.createdAt))} · ${esc(ago(a.createdAt))}</p></div>
+    <div class="row"><div class="ib ${open ? (zone ? 'warning' : 'danger') : 'success'}">${I(open ? (zone ? 'flag' : 'alert') : 'check')}</div>
+      <div class="grow"><h2>${esc(a.userName)}</h2><p class="sm" style="font-weight:600;color:${zone ? 'var(--warning)' : 'var(--danger)'}">${zone ? `خرج من منطقة «${esc(a.zoneName || '')}»${a.dist ? ` بحوالي ${fmtDist(a.dist)}` : ''}` : 'بلاغ طوارئ SOS'}</p><p class="muted xs">${esc(fmtDT(a.createdAt))} · ${esc(ago(a.createdAt))}</p></div>
       <span class="chip ${open ? 'danger' : 'muted'}">${open ? 'مفتوح' : 'تم التعامل'}</span></div>
-    ${m ? medCard(m, true) : ''}
+    ${m && !zone ? medCard(m, true) : ''}
     <div class="grid3">
       <a class="action${a.userPhone ? '' : ' disabled'}" href="tel:${esc(a.userPhone)}"><span class="ib success">${I('phone')}</span>اتصال</a>
       <a class="action${a.lat != null ? '' : ' disabled'}" href="${a.lat != null ? gmaps(a.lat, a.lng) : '#'}" target="_blank" rel="noopener"><span class="ib">${I('map')}</span>الموقع</a>
@@ -1076,7 +1147,7 @@ function vSGroup(){
 
 /* ---------------- sheets ---------------- */
 function memberSheet(m){
-  const alert = S.alerts.some(a => a.status === 'open' && a.userId === m.id);
+  const alert = S.alerts.some(a => a.status === 'open' && a.type !== 'zone' && a.userId === m.id);
   return `<div class="row">${avatar(m, alert, 58)}<div class="grow"><h2 style="font-size:21px">${esc(m.name)}</h2><span class="chip dot ${alert ? 'danger' : isOnline(m) ? 'success' : 'muted'}">${alert ? 'يحتاج مساعدة' : isOnline(m) ? 'متصل' : 'غير متصل'}</span></div><button class="iconbtn" data-act="close" aria-label="إغلاق">${I('x')}</button></div>
     <div class="grid3" style="margin-top:16px">
       <a class="action${m.phone ? '' : ' disabled'}" href="tel:${esc(m.phone)}"><span class="ib success">${I('phone')}</span>اتصال</a>
@@ -1133,7 +1204,7 @@ function refresh(){ if (S.editing) setSheet(S.editing === 'group' ? groupSheet(!
 
 /* ---------------- actions ---------------- */
 function busy(k, on){ S.busy[k] = on; render(); }
-function goTab(t){ S.tab = t; S.draft = {}; render(); window.scrollTo(0, 0); }
+function goTab(t){ if (t !== 'map') S.zoneEdit = null; S.tab = t; S.draft = {}; render(); window.scrollTo(0, 0); }
 function copyText(t, msg){
   const done = () => toast(msg);
   const fallback = () => { try{ const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }catch(e){ toast(t); } };
@@ -1251,7 +1322,7 @@ const A = {
     if (!S.tracking) startTracking();
     busy('refresh', true);
     const f = await getOnce(12000);
-    if (f){ S.fix = f; await push(true); }
+    if (f){ S.fix = f; checkZones(f); await push(true); }
     busy('refresh', false);
     toast(f ? 'تم تحديث موقعك' : 'تعذّر تحديد الموقع الآن');
   },
@@ -1293,6 +1364,28 @@ const A = {
     openModal(qrSheet(key));
   },
   async newQr(){ const key = genKey(); try{ await meRef().update({ qrKey:key }); setSheet(qrSheet(key)); toast('تم إنشاء باركود جديد، القديم لم يعد يعمل'); }catch(e){ toast('تعذّر التحديث.'); } },
+
+  /* zones */
+  zoneNew(){
+    let c = LM.map ? LM.map.getCenter() : null;
+    const loc = S.members.filter(hasLoc);
+    const center = c ? { lat:c.lat, lng:c.lng } : loc.length ? { lat:loc[0].lat, lng:loc[0].lng } : { lat:HARAM.lat, lng:HARAM.lng };
+    S.zoneEdit = { id:null, name:'', r:300, lat:center.lat, lng:center.lng }; render(); window.scrollTo(0, 0);
+  },
+  zoneEditStart(d){ const z = zonesOf(selGroup()).find(x => x.id === d.id); if (!z) return; S.zoneEdit = Object.assign({}, z); render(); window.scrollTo(0, 0); },
+  zoneCancel(){ S.zoneEdit = null; render(); },
+  async zoneHere(){ toast('جارٍ تحديد موقعك…'); const f = await getOnce(10000); if (!f) return toast('تعذّر تحديد موقعك. اضغط على الخريطة بدلًا من ذلك.'); S.zoneEdit.lat = f.lat; S.zoneEdit.lng = f.lng; updateZonePreview(); if (LM.map) LM.map.setView([f.lat, f.lng], 16); },
+  async zoneSave(){
+    const g = selGroup(), z = S.zoneEdit; if (!g || !z) return;
+    const name = String(z.name || '').trim();
+    if (!name) return toast('اكتب اسم المكان.');
+    const zone = { id:z.id || ('z' + genKey().slice(0, 8)), name, lat:z.lat, lng:z.lng, r:Math.round(z.r) };
+    const zones = zonesOf(g).filter(x => x.id !== zone.id).concat(zone);
+    try{ await db.doc('groups/' + g.id).update({ zones }); S.zoneEdit = null; LM.key = null; render(); toast('تم حفظ المنطقة ✓ سيصلك تنبيه عند خروج أي مسافر منها'); }
+    catch(e){ toast('تعذّر الحفظ.'); }
+  },
+  zoneDelete(d){ const z = zonesOf(selGroup()).find(x => x.id === d.id); if (z) confirmBox('حذف المنطقة', `حذف «${z.name}»؟ لن تصلك تنبيهات الخروج منها.`, 'zoneDoDelete', 'حذف', true, ` data-id="${esc(z.id)}"`); },
+  async zoneDoDelete(d){ closeModal(); const g = selGroup(); if (!g) return; try{ await db.doc('groups/' + g.id).update({ zones:zonesOf(g).filter(x => x.id !== d.id) }); toast('تم حذف المنطقة'); }catch(e){ toast('تعذّر الحذف.'); } },
 
   /* supervisor */
   async scanQr(){ if (!selGroup()) return toast('أنشئ مجموعة أولًا.'); await stopScanner(); openModal(scanSheet()); startScanner(); },
