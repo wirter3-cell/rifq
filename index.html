@@ -201,6 +201,7 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .med{ border-radius:20px; padding:16px; background:var(--danger-50); }
 .med .bt{ width:64px; height:64px; border-radius:18px; background:var(--card); color:var(--danger); display:grid; place-items:center; font-weight:700; font-size:22px; direction:ltr; flex:none; }
 .med .k{ color:var(--danger); font-size:13px; font-weight:600; margin-bottom:4px; }
+.med .tag{ background:#fff; color:var(--danger); border:1px solid rgba(229,72,77,.25); } .med .tags{ gap:6px; } .med .muted{ color:#B9868A; }
 
 /* code */
 .code{ font-size:34px; font-weight:700; letter-spacing:8px; text-align:center; padding:14px; border-radius:18px; background:var(--primary-50); color:var(--primary-700); direction:ltr; font-family:ui-monospace,Menlo,monospace; }
@@ -715,6 +716,11 @@ function mountMap(){
     }
     if (p.act) mk.on('click', () => A[p.act]({ id:p.id }));
   }
+  if (S.focusId){
+    const p = pts.find(x => x.id === S.focusId && x.state !== 'sos') || pts.find(x => x.id === S.focusId);
+    S.focusId = null;
+    if (p){ LM.key = opts.key; LM.map.setView([p.lat, p.lng], 18); return; }
+  }
   if (opts.follow && pts.length){
     if (LM.key !== opts.key){ LM.key = opts.key; LM.map.setView([pts[0].lat, pts[0].lng], 17); }
     else LM.map.panTo([pts[0].lat, pts[0].lng], { animate:true });
@@ -1158,7 +1164,7 @@ function medCard(m, compact){
   return `<div class="med"><div class="row top"><div class="bt">${esc(bt)}</div><div class="grow stack sm">
     <div><div class="k">الأمراض المزمنة</div>${tagList(m.diseases, true)}</div>
     <div><div class="k">الحساسية</div>${tagList(m.allergies, true)}</div>
-    ${!compact && m.medications ? `<div><div class="k">الأدوية</div><p class="sm">${esc(m.medications)}</p></div>` : ''}
+    ${compact ? '' : `<div><div class="k">الأدوية</div>${m.medications ? `<span class="tag">${esc(m.medications)}</span>` : '<span class="muted sm">لا يوجد / لم يُضف</span>'}</div>`}
   </div></div></div>`;
 }
 function vSGroup(){
@@ -1182,12 +1188,17 @@ function memberSheet(m){
   return `<div class="row">${avatar(m, alert, 58)}<div class="grow"><h2 style="font-size:21px">${esc(m.name)}</h2><span class="chip dot ${alert ? 'danger' : isOnline(m) ? 'success' : 'muted'}">${alert ? 'يحتاج مساعدة' : isOnline(m) ? 'متصل' : 'غير متصل'}</span></div><button class="iconbtn" data-act="close" aria-label="إغلاق">${I('x')}</button></div>
     <div class="grid3" style="margin-top:16px">
       <a class="action${m.phone ? '' : ' disabled'}" href="tel:${esc(m.phone)}"><span class="ib success">${I('phone')}</span>اتصال</a>
-      <a class="action${hasLoc(m) ? '' : ' disabled'}" href="${hasLoc(m) ? gmaps(m.lat, m.lng) : '#'}" target="_blank" rel="noopener"><span class="ib">${I('map')}</span>الموقع</a>
+      <button class="action${hasLoc(m) ? '' : ' disabled'}" data-act="focusMember" data-id="${esc(m.id)}"><span class="ib">${I('map')}</span>على الخريطة</button>
       <a class="action${m.emergencyContact ? '' : ' disabled'}" href="tel:${esc(m.emergencyContact)}"><span class="ib danger">${I('heart')}</span>الطوارئ</a>
     </div>
     <div class="section-title" style="margin-top:20px"><h2>البطاقة الطبية</h2></div>${medCard(m)}
     <div class="section-title"><h2>البيانات</h2></div>
-    <div class="card" style="padding:4px 18px">${kv('الجوال', m.phone, true)}${kv('العمر', m.age ? String(m.age) : '')}${kv('الجنسية', m.nationality)}${kv('جهة الطوارئ', m.emergencyName ? `${m.emergencyName}${m.emergencyRelation ? ` (${m.emergencyRelation})` : ''}` : '')}${kv('آخر ظهور', ago(m.updatedAt))}</div>`;
+    <div class="card" style="padding:4px 18px">${kv('الجوال', m.phone, true)}${kv('العمر', m.age ? String(m.age) : '')}${kv('الجنسية', m.nationality)}</div>
+    <div class="section-title"><h2>جهة الطوارئ</h2></div>
+    <div class="card" style="padding:4px 18px">${kv('الاسم', m.emergencyName ? `${m.emergencyName}${m.emergencyRelation ? ` (${m.emergencyRelation})` : ''}` : '')}${kv('الجوال', m.emergencyContact, true)}</div>
+    <div class="section-title"><h2>الموقع</h2></div>
+    <div class="card" style="padding:4px 18px">${kv('آخر تحديث للموقع', hasLoc(m) ? ago(m.locAt) : '')}${kv('آخر ظهور في التطبيق', ago(m.updatedAt))}${m.acc && hasLoc(m) ? kv('دقة الموقع', `± ${m.acc} م`) : ''}</div>
+    ${hasLoc(m) ? `<a class="btn ghost block" style="margin-top:10px" href="${gmaps(m.lat, m.lng)}" target="_blank" rel="noopener">${I('ext')}فتح في خرائط Google</a>` : ''}`;
 }
 function editSheet(key){
   const s = SECTIONS[key];
@@ -1395,6 +1406,8 @@ const A = {
     openModal(qrSheet(key));
   },
   async newQr(){ const key = genKey(); try{ await meRef().update({ qrKey:key }); setSheet(qrSheet(key)); toast('تم إنشاء باركود جديد، القديم لم يعد يعمل'); }catch(e){ toast('تعذّر التحديث.'); } },
+
+  focusMember(d){ closeModal(); S.zoneEdit = null; S.focusId = d.id; S.tab = 'map'; render(); window.scrollTo(0, 0); },
 
   /* zones */
   zoneNew(){
