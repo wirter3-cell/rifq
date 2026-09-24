@@ -231,6 +231,21 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .pin-outside .pin-av::before{ content:""; position:absolute; inset:-7px; border-radius:50%; border:2.5px solid #D9771A; animation:ring 1.6s ease-out infinite; }
 .pin-sos .pin-av{ background:#E5484D; } .pin-sos .pin-av::after{ background:#E5484D; } .pin-sos small{ color:#E5484D; }
 .pin-sos .pin-av::before{ content:""; position:absolute; inset:-8px; border-radius:50%; border:3px solid #E5484D; animation:ring 1.2s ease-out infinite; }
+.avatar.photo{ background-size:cover; background-position:center; color:transparent; }
+.pin-av{ background-size:cover; background-position:center; }
+.idphoto{ width:64px; height:64px; border-radius:20px; background-size:cover; background-position:center; margin-inline-end:14px; border:2px solid rgba(255,255,255,.5); flex:none; }
+.bar{ height:8px; border-radius:8px; background:var(--line); overflow:hidden; margin-top:6px; }
+.bar span{ display:block; height:100%; background:var(--primary-600); border-radius:8px; transition:width .3s; }
+.steps-wrap{ display:flex; flex-direction:column; gap:12px; }
+.step{ display:flex; gap:12px; align-items:flex-start; position:relative; }
+.step::before{ content:""; position:absolute; top:44px; bottom:-16px; inset-inline-start:21px; width:2px; background:var(--line); }
+.step:last-child::before{ display:none; }
+.step-mark{ width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-weight:700; flex:none; background:var(--card); border:2px solid var(--line); color:var(--muted); z-index:1; }
+.step-mark svg{ width:20px; height:20px; }
+.step.done .step-mark{ background:var(--success); border-color:var(--success); color:#fff; }
+.step.now .step-mark{ background:var(--primary-600); border-color:var(--primary-600); color:#fff; box-shadow:0 0 0 5px var(--primary-100); }
+.step.now .card{ border-color:var(--primary); }
+.step.locked .card{ opacity:.72; }
 .legend-c{ border-radius:14px; padding:8px 4px; text-align:center; line-height:1.3; }
 .legend-c b{ display:block; font-size:20px; } .legend-c span{ font-size:12px; font-weight:600; }
 .legend-c.lg-on{ background:var(--success-50); color:var(--success); } .legend-c.lg-off{ background:var(--line); color:var(--muted); }
@@ -333,6 +348,11 @@ const P = {
   edit:'M4 20h4L19 9l-4-4L4 16z M13.5 6.5l4 4',
   shield:'M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z M8.5 12l2.5 2.5 4.5-5',
   chev:'M15 6l-6 6 6 6',
+  route:'M6 20a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z M18 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z M8.5 17.5h6a3.5 3.5 0 0 0 0-7h-5a3.5 3.5 0 0 1 0-7h5',
+  mega:'M4 10v4h3l7 4V6l-7 4z M18 9.5a4 4 0 0 1 0 5',
+  lockOpen:'M6 11h12v9H6z M8.5 11V8a3.5 3.5 0 0 1 6.8-1',
+  tent:'M12 4L4 20h16z M12 4v16 M8 20l4-8 4 8',
+  crown:'M4 18h16 M4 18l-1-8 5 3 4-7 4 7 5-3-1 8',
   qr:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 14h2 M14 18h2v2 M18 18h2v2h-2z',
   camera:'M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
   key:'M14 10a4 4 0 1 0-3.5 4L9 15.5V18H6.5v2.5H4V18l6.5-6.5 M16 8.5h.1'
@@ -431,7 +451,7 @@ const S = {
   group:null, groups:[], groupsLoaded:false, selGroupId:LS.get('rifq_sel_group', null), scopeId:undefined,
   members:[], alerts:[], seen:null,
   fix:null, geoErr:null, tracking:false, trackTried:false, wake:false,
-  draft:{}, authMode:'login', alertFilter:'open', busy:{}, wiz:null, editing:null, trails:{}, zoneEdit:null, zoneOut:null
+  draft:{}, authMode:'login', alertFilter:'open', busy:{}, wiz:null, editing:null, trails:{}, zoneEdit:null, zoneOut:null, campaign:null, campLoaded:false, stepEdit:null, notice:''
 };
 const subs = {};
 function unsub(k){ if (subs[k]){ try{ subs[k](); }catch(e){} subs[k] = null; } }
@@ -441,7 +461,13 @@ const val = (k, fb) => (S.draft[k] !== undefined ? S.draft[k] : (fb == null ? ''
 /* ---------------- render scheduling ---------------- */
 let renderTimer = null, renderPending = false;
 function isEditing(){ const a = document.activeElement; return !!(a && a.closest && a.closest('#view') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); }
-function scheduleRender(){ if (isEditing()){ renderPending = true; return; } clearTimeout(renderTimer); renderTimer = setTimeout(render, 16); }
+let lastRender = 0;
+function scheduleRender(){
+  if (isEditing()){ renderPending = true; return; }
+  clearTimeout(renderTimer);
+  if (Date.now() - lastRender > 350){ lastRender = Date.now(); render(); return; }
+  renderTimer = setTimeout(() => { lastRender = Date.now(); render(); }, 80);
+}
 document.addEventListener('focusout', () => {
   if (!renderPending) return;
   setTimeout(() => { if (isEditing()) return; if (renderPending){ renderPending = false; render(); } }, 350);
@@ -450,6 +476,7 @@ function onField(e){
   const t = e.target; if (!t || !t.dataset) return;
   if (t.dataset.draft) S.draft[t.dataset.draft] = t.value;
   if (t.dataset.w && S.wiz) S.wiz[t.dataset.w] = t.value;
+  if (t.dataset.s && S.stepEdit) S.stepEdit[t.dataset.s] = t.value;
   if (t.dataset.z && S.zoneEdit){ S.zoneEdit[t.dataset.z] = t.dataset.z === 'r' ? Number(t.value) : t.value; if (t.dataset.z === 'r') updateZonePreview(); }
 }
 document.addEventListener('input', onField);
@@ -484,7 +511,7 @@ const vibrate = p => { try{ navigator.vibrate && navigator.vibrate(p); }catch(e)
 
 /* ---------------- session ---------------- */
 function resetSession(){
-  stopTracking(false); unsubAll();
+  stopTracking(false); unsubAll(); markOnboarded._done = false; autoAdvance._busy = false;
   Object.assign(S, { me:null, meLoaded:false, tab:null, group:null, groups:[], groupsLoaded:false, members:[], alerts:[], scopeId:undefined, seen:null, fix:null, geoErr:null, trackTried:false, draft:{}, wiz:null, editing:null });
 }
 function bindMe(uid){
@@ -495,20 +522,31 @@ function bindMe(uid){
     scheduleRender();
   });
 }
+function markOnboarded(){
+  if (markOnboarded._done || !S.me || S.me.onboarded) return;
+  markOnboarded._done = true;
+  meRef().update({ onboarded:true }).catch(() => { markOnboarded._done = false; });
+}
 function onMe(prev, me){
   if (me.role === 'traveler'){
     if (!prev || prev.groupId !== me.groupId){
       unsub('group'); S.group = null;
-      if (me.groupId) subs.group = watchDoc('groups/' + me.groupId, g => { S.group = g; scheduleRender(); });
+      if (me.groupId) subs.group = watchDoc('groups/' + me.groupId, g => { S.group = g; syncTravelerGroup(g); scheduleRender(); });
     }
-    if (!me.onboarded && me.groupId && prev && !prev.groupId){ S.wiz = null; S.tab = 'home'; meRef().update({ onboarded:true }).catch(() => {}); toast('أضافك المشرف إلى المجموعة 🎉'); }
+    if (!me.onboarded && me.groupId && prev && !prev.groupId){ S.wiz = null; S.tab = 'home'; markOnboarded(); toast('أضافك المشرف إلى المجموعة 🎉'); }
     if (me.onboarded && !S.trackTried){ S.trackTried = true; if (me.sharing !== false) startTracking(); }
+  } else if (me.role === 'admin'){
+    if (!subs.camp) subs.camp = watchQuery('campaigns', 'adminId', me.id, list => {
+      S.campaign = list[0] || null; S.campLoaded = true;
+      if (S.campaign){ scopeCamp(S.campaign.id); markOnboarded(); }
+      scheduleRender();
+    });
   } else if (!subs.groups){
     subs.groups = watchQuery('groups', 'supervisorId', me.id, list => {
       S.groups = list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); S.groupsLoaded = true;
       const keep = S.selGroupId && list.some(g => g.id === S.selGroupId);
       scope(keep ? S.selGroupId : (list[0] ? list[0].id : null));
-      if (list.length && S.me && !S.me.onboarded) db.doc('members/' + S.user.uid).update({ onboarded:true }).catch(() => {});
+      if (list.length) markOnboarded();
       scheduleRender();
     });
   }
@@ -518,7 +556,7 @@ function scope(id){
   if (id === S.scopeId) return;
   S.scopeId = id; LM.key = null; S.trails = {}; unsub('members'); unsub('alerts'); S.members = []; S.alerts = []; S.seen = null;
   if (!id) return;
-  subs.members = watchQuery('members', 'groupId', id, l => { trackTrails(l); S.members = l.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ar')); scheduleRender(); });
+  subs.members = watchQuery('members', 'groupId', id, l => { trackTrails(l); S.members = l.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ar')); autoAdvance(selGroup()); scheduleRender(); });
   subs.alerts = watchQuery('alerts', 'groupId', id, l => { l.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); incoming(l); S.alerts = l; scheduleRender(); });
 }
 function trackTrails(list){
@@ -531,8 +569,31 @@ function trackTrails(list){
 const zonesOf = g => (g && Array.isArray(g.zones)) ? g.zones : [];
 function isOutside(m, g){
   const zs = zonesOf(g);
-  if (!zs.length || !hasLoc(m)) return false;
+  if (!zs.length) return !!m.outside;
+  if (!hasLoc(m)) return false;
   return zs.every(z => distM(m, z) > z.r + 10);
+}
+function scopeCamp(cid){
+  if (cid === S.scopeId) return;
+  S.scopeId = cid; LM.key = null; S.trails = {};
+  unsub('members'); unsub('alerts'); unsub('cgroups');
+  subs.cgroups = watchQuery('groups', 'campaignId', cid, l => { S.groups = l.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); S.groupsLoaded = true; scheduleRender(); });
+  subs.members = watchQuery('members', 'campaignId', cid, l => { trackTrails(l); S.members = l.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ar')); scheduleRender(); });
+  subs.alerts = watchQuery('alerts', 'campaignId', cid, l => { l.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); incoming(l); S.alerts = l; scheduleRender(); });
+}
+function syncTravelerGroup(g){
+  if (!g || !S.me) return;
+  if ((g.campaignId || null) !== (S.me.campaignId || null)) meRef().update({ campaignId:g.campaignId || null }).catch(() => {});
+  const latest = noticesOf(g)[0];
+  if (latest && LS.get('rifq_notice') !== latest.id){
+    LS.set('rifq_notice', latest.id);
+    vibrate([200, 100, 200]); beep();
+    openModal(`<div class="bigicon" style="background:var(--primary-50);color:var(--primary-600)">${I('mega')}</div>
+      <h2 style="font-size:21px">إعلان من المشرف</h2>
+      <p style="margin:10px 0 6px;font-size:17px;line-height:1.7">${esc(latest.text)}</p>
+      <p class="muted sm" style="margin-bottom:18px">${esc(fmtDT(latest.at))}</p>
+      <button class="btn block" data-act="close">حسنًا</button>`, { center:true });
+  }
 }
 const selGroup = () => S.groups.find(g => g.id === S.selGroupId) || null;
 
@@ -602,7 +663,7 @@ function checkZones(f){
     const now = Date.now();
     Promise.all([
       meRef().update({ outside:true, outsideAt:now }),
-      db.collection('alerts').add({ type:'zone', groupId:S.me.groupId, userId:S.user.uid, userName:S.me.name, userPhone:S.me.phone || '',
+      db.collection('alerts').add({ type:'zone', groupId:S.me.groupId, campaignId:S.me.campaignId || null, userId:S.user.uid, userName:S.me.name, userPhone:S.me.phone || '',
         lat:f.lat, lng:f.lng, acc:f.acc || null, zoneName:best.z.name, dist:Math.round(best.d), createdAt:now, status:'open' })
     ]).catch(e => console.warn('zone', e)).finally(() => { zoneWriting = false; });
   } else if (!out && wasOut && inStreak >= 2){
@@ -709,7 +770,7 @@ function mountMap(){
     let mk;
     if (p.state){
       mk = L.marker([p.lat, p.lng], { zIndexOffset:(p.z || 0) * 100, icon:L.divIcon({ className:'rq-pin', iconSize:[140, 84], iconAnchor:[70, 22],
-        html:`<div class="pin pin-${p.state}"><span class="pin-av">${esc(p.initial || '')}</span><span class="pin-lbl">${esc(p.label)}<small>${esc(p.statusText || '')}</small></span></div>` }) }).addTo(LM.layer);
+        html:`<div class="pin pin-${p.state}"><span class="pin-av"${p.photo ? ` style="background-image:url('${p.photo}');color:transparent"` : ''}>${esc(p.initial || '')}</span><span class="pin-lbl">${esc(p.label)}<small>${esc(p.statusText || '')}</small></span></div>` }) }).addTo(LM.layer);
     } else {
       mk = L.circleMarker([p.lat, p.lng], { radius:10, color:'#fff', weight:3, fillColor:p.color, fillOpacity:1 }).addTo(LM.layer);
       if (p.label) mk.bindTooltip(esc(p.label), { permanent:true, direction:'top', offset:[0, -11], className:'rq-tip' });
@@ -730,7 +791,7 @@ function mountMap(){
 /* ---------------- shared UI ---------------- */
 const spinner = dark => `<span class="spin${dark ? ' dark' : ''}"></span>`;
 const center = inner => `<div class="center-screen"><div style="max-width:380px;width:100%">${inner}</div></div>`;
-const avatar = (m, alert, size) => `<div class="avatar${alert ? ' alert' : ''}"${size ? ` style="width:${size}px;height:${size}px;font-size:${size * .4}px"` : ''}>${esc(initial(m.name))}<span class="dot${isOnline(m) ? ' on' : ''}"></span></div>`;
+const avatar = (m, alert, size) => `<div class="avatar${alert ? ' alert' : ''}${m.photo ? ' photo' : ''}" style="${size ? `width:${size}px;height:${size}px;font-size:${size * .4}px;` : ''}${m.photo ? `background-image:url('${m.photo}')` : ''}">${m.photo ? '' : esc(initial(m.name))}<span class="dot${isOnline(m) ? ' on' : ''}"></span></div>`;
 const field = (label, input, hint) => `<label class="field"><span>${label}</span>${input}${hint ? `<small>${hint}</small>` : ''}</label>`;
 const kv = (k, v, ltr) => `<div class="kv"><span class="k">${esc(k)}</span><span class="v${v ? '' : ' empty'}">${v ? (ltr ? `<span class="ltr">${esc(v)}</span>` : esc(v)) : 'لم يُضف'}</span></div>`;
 const tagList = (s, red) => { const l = splitList(s); return l.length ? `<div class="tags">${l.map(x => `<span class="tag${red && x !== NONE ? ' red' : ''}">${esc(x)}</span>`).join('')}</div>` : '<span class="muted sm">لم يُضف</span>'; };
@@ -829,6 +890,55 @@ const SECTIONS = {
 };
 const WIZ_STEPS = ['personal', 'health', 'emergency', 'group'];
 
+/* ---------------- photo ---------------- */
+function shrinkPhoto(file){
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const s = Math.min(img.width, img.height), c = document.createElement('canvas');
+        c.width = c.height = 320;
+        c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 320, 320);
+        res(c.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = rej; img.src = fr.result;
+    };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+async function savePhoto(file){
+  if (!file) return;
+  toast('جارٍ تجهيز الصورة…');
+  try{
+    const data = await shrinkPhoto(file);
+    if (data.length > 400000) return toast('الصورة كبيرة، جرّب صورة أخرى.');
+    await meRef().update({ photo:data }); toast('تم تحديث الصورة ✓');
+  }catch(e){ toast('تعذّر تحميل الصورة.'); }
+}
+
+/* ---------------- journey helpers ---------------- */
+const stepsOf = g => (g && Array.isArray(g.steps)) ? g.steps : [];
+const noticesOf = g => (g && Array.isArray(g.notices)) ? g.notices : [];
+const travelers = () => S.members.filter(m => m.role !== 'supervisor');
+const allowedIndex = (g, m) => Math.max((g && g.openIndex) || 0, (m && m.unlocked) || 0);
+function stepStatus(g, m, i){
+  if ((m.progress || 0) > i) return 'done';
+  return i <= allowedIndex(g, m) ? 'now' : 'locked';
+}
+const stepDone = (i) => travelers().filter(m => (m.progress || 0) > i).length;
+function autoAdvance(g){
+  if (!g || S.me.role !== 'supervisor') return;
+  const steps = stepsOf(g), i = g.openIndex || 0, t = travelers();
+  if (!steps.length || i >= steps.length - 1 || !t.length || autoAdvance._busy) return;
+  if (steps[i] && steps[i].type === 'activity') return;
+  if (t.every(m => (m.progress || 0) > i)){
+    autoAdvance._busy = true;
+    db.doc('groups/' + g.id).update({ openIndex:i + 1 }).then(() => { toast('أنهى الجميع الخطوة — فُتحت الخطوة التالية تلقائيًا ✓'); })
+      .catch(() => {}).finally(() => { autoAdvance._busy = false; });
+  }
+}
+
 /* ---------------- QR ---------------- */
 function qrSvg(text){
   if (!window.qrcode) return '<p class="muted center">تعذّر تحميل الباركود. تحقق من الإنترنت.</p>';
@@ -881,7 +991,11 @@ async function scanFromFile(file){
   try{ const tmp = new Lib.Html5Qrcode('qr-file', { verbose:false }); const text = await tmp.scanFile(file, false); await onScan(text); }
   catch(e){ scanMsg('<b style="color:var(--danger)">لم نجد باركود واضح في الصورة. حاول مرة أخرى.</b>'); }
 }
-document.addEventListener('change', e => { if (e.target && e.target.dataset && e.target.dataset.file === 'scan' && e.target.files && e.target.files[0]) scanFromFile(e.target.files[0]); });
+document.addEventListener('change', e => {
+  const t = e.target; if (!t || !t.dataset || !t.files || !t.files[0]) return;
+  if (t.dataset.file === 'scan') scanFromFile(t.files[0]);
+  if (t.dataset.file === 'photo') savePhoto(t.files[0]);
+});
 
 /* ---------------- views: setup & auth ---------------- */
 function vSetup(){
@@ -898,7 +1012,8 @@ function vAuth(){
     body = `<div><h2 style="font-size:21px">حساب جديد</h2><p class="muted sm" style="margin-top:4px">اختر نوع حسابك</p></div>
       <div class="stack sm">
         <button type="button" class="role" data-act="role" data-v="traveler" aria-pressed="${role === 'traveler'}"><div class="ib">${I('user')}</div><div class="grow"><b>مسافر / حاج</b><small>أشارك موقعي مع مشرف مجموعتي وأطلب المساعدة عند الحاجة</small></div><span class="tick"></span></button>
-        <button type="button" class="role" data-act="role" data-v="supervisor" aria-pressed="${role === 'supervisor'}"><div class="ib">${I('shield')}</div><div class="grow"><b>مشرف مجموعة</b><small>أتابع مواقع أعضاء مجموعتي وأستقبل بلاغات الطوارئ</small></div><span class="tick"></span></button>
+        <button type="button" class="role" data-act="role" data-v="supervisor" aria-pressed="${role === 'supervisor'}"><div class="ib">${I('shield')}</div><div class="grow"><b>مشرف مجموعة</b><small>أتابع مجموعتي، أدير مسار الرحلة، وأستقبل البلاغات</small></div><span class="tick"></span></button>
+        <button type="button" class="role" data-act="role" data-v="admin" aria-pressed="${role === 'admin'}"><div class="ib">${I('crown')}</div><div class="grow"><b>إداري الحملة</b><small>أشرف على كل المجموعات والمشرفين والحجاج في الحملة</small></div><span class="tick"></span></button>
       </div>
       ${field('الاسم الكامل', `<input class="in" autocomplete="name" data-draft="name" value="${esc(val('name'))}">`)}
       ${email}
@@ -968,6 +1083,7 @@ function groupFields(){
     ${field('الرحلة القادمة', `<input class="in" data-w="gtrip" value="${esc(w.gtrip)}" placeholder="مثال: التوجه إلى منى">`, 'اختياري')}
     ${field('نقطة التجمع', `<input class="in" data-w="gmeet" value="${esc(w.gmeet)}" placeholder="مثال: بوابة الملك فهد">`, 'اختياري')}
     ${field('موعد الرحلة', `<input class="in" type="datetime-local" data-w="gtime" value="${esc(w.gtime)}">`, 'اختياري')}
+    ${field('رمز الحملة', `<input class="in ltr" style="display:block;text-align:right;text-transform:uppercase" data-w="gcamp" value="${esc(w.gcamp || '')}" placeholder="اتركه فارغًا إن لم يكن لديك">`, 'يربط مجموعتك بإداري الحملة ليتابع الجميع')}
   </div>`;
 }
 
@@ -997,6 +1113,15 @@ function vTHome(){
         <button class="btn soft block" data-act="showQr">${I('qr')}أو اعرض باركودي للمشرف</button></div>` : ''}
       ${trip ? `<div class="card row top"><div class="ib">${I('bus')}</div><div class="grow"><div class="row between"><p class="muted sm">الرحلة القادمة</p>${trip.tripTime ? `<span class="chip primary">${esc(tripStatus(trip.tripTime))}</span>` : ''}</div>
         <h2 style="margin-top:2px">${esc(trip.tripTitle)}</h2>${trip.tripTime ? `<p class="ink2 sm">${esc(fmtDT(trip.tripTime))}</p>` : ''}${trip.meetingPoint ? `<p class="ink2 sm">نقطة التجمع: ${esc(trip.meetingPoint)}</p>` : ''}</div></div>` : ''}
+      ${(() => { const n = noticesOf(g)[0]; return n ? `<div class="card row top" style="border-color:var(--primary)"><div class="ib">${I('mega')}</div><div class="grow"><div class="muted xs">إعلان من المشرف · ${esc(ago(n.at))}</div><p style="font-weight:600;line-height:1.7;margin-top:2px">${esc(n.text)}</p></div></div>` : ''; })()}
+      ${(() => {
+        const steps = stepsOf(g); if (!steps.length) return '';
+        const i = steps.findIndex((s, k) => stepStatus(g, me, k) !== 'done');
+        const s = i < 0 ? null : steps[i];
+        return `<div class="card tap row" data-act="tab" data-v="trip" tabindex="0"><div class="ib">${I('route')}</div>
+          <div class="grow"><div class="muted xs">${s ? `الخطوة ${i + 1} من ${steps.length}` : 'اكتملت كل الخطوات'}</div><h3>${s ? esc(s.title) : 'رحلة موفقة 🌿'}</h3>${s && s.at ? `<p class="muted xs">${esc(fmtDT(s.at))}</p>` : ''}</div>
+          <span class="muted">${I('chev', 'width:20px;height:20px')}</span></div>`;
+      })()}
       ${pct < 100 ? `<div class="card tap row" data-act="tab" data-v="me" tabindex="0"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div class="grow"><h3>أكمل ملفك الصحي</h3><p class="muted sm">يساعد المسعفين على خدمتك بسرعة</p></div><span class="muted">${I('chev', 'width:20px;height:20px')}</span></div>` : ''}
     </div>
     <div class="sos-wrap"><button class="sos" data-act="sos" aria-label="إرسال بلاغ طوارئ"><b>SOS</b><span>طوارئ</span></button></div>
@@ -1029,7 +1154,7 @@ function vTMe(){
   return `<h1 style="margin-bottom:14px">ملفي</h1>
     <div class="idcard">
       <div class="row between in-row">${brand('', true).replace('<svg', '<svg style="width:34px;height:34px"')}<span class="chip" style="background:rgba(255,255,255,.14);color:#fff">بطاقة المسافر</span></div>
-      <div class="row in-row" style="margin-top:22px"><div class="grow"><div style="font-size:22px;font-weight:700;line-height:1.3">${esc(me.name)}</div><div class="lbl" style="font-size:14px">${esc(g ? g.name : 'بدون مجموعة')}</div></div>
+      <div class="row in-row" style="margin-top:22px">${me.photo ? `<div class="idphoto" style="background-image:url('${me.photo}')"></div>` : ''}<div class="grow"><div style="font-size:22px;font-weight:700;line-height:1.3">${esc(me.name)}</div><div class="lbl" style="font-size:14px">${esc(g ? g.name : 'بدون مجموعة')}</div></div>
         <div style="text-align:center"><div class="lbl" style="margin-bottom:4px">فصيلة الدم</div><div class="blood">${esc(me.bloodType && me.bloodType !== 'لا أعرف' ? me.bloodType : '؟')}</div></div></div>
       <div class="grid3 in-row" style="margin-top:18px">
         <div><div class="lbl">الجنسية</div><div class="val">${esc(me.nationality || '—')}</div></div>
@@ -1037,7 +1162,10 @@ function vTMe(){
         <div><div class="lbl">الطوارئ</div><div class="val ltr">${esc(me.emergencyContact || '—')}</div></div>
       </div>
     </div>
-    <button class="btn soft block" style="margin-top:12px" data-act="showQr">${I('qr')}باركود الانضمام</button>
+    <div class="grid2" style="margin-top:12px">
+      <label class="btn soft">${I('camera')}${me.photo ? 'تغيير الصورة' : 'إضافة صورتي'}<input type="file" accept="image/*" hidden data-file="photo"></label>
+      <button class="btn soft" data-act="showQr">${I('qr')}باركود الانضمام</button>
+    </div>
     ${pct < 100 ? `<div class="card row" style="margin-top:12px"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div class="grow"><h3>ملفك مكتمل ${pct}%</h3><p class="muted sm">أكمل البيانات الناقصة بالضغط على «تعديل»</p></div></div>` : ''}
     <div class="stack" style="margin-top:12px">
       ${sectionCard('personal', kv('الجوال', me.phone, true) + kv('العمر', me.age ? String(me.age) : '') + kv('الجنسية', me.nationality))}
@@ -1110,7 +1238,7 @@ function vSMap(){
   const STN = ['sos', 'outside', 'offline', 'online'];
   const stText = (m, i) => i === 0 ? 'يحتاج مساعدة' : i === 1 ? 'خارج النطاق' : i === 3 ? 'متصل الآن' : `غير متصل · ${ago(m.updatedAt)}`;
   const counts = [0, 0, 0, 0];
-  const pts = located.map(m => { const st = memberState(m, alertIds.has(m.id)); counts[st[3]]++; return { id:m.id, lat:m.lat, lng:m.lng, label:first(m.name), initial:initial(m.name), state:STN[st[3]], statusText:stText(m, st[3]), act:ze ? null : 'member', z:4 - st[3], color:st[2], trail:S.trails[m.id] }; });
+  const pts = located.map(m => { const st = memberState(m, alertIds.has(m.id)); counts[st[3]]++; return { id:m.id, lat:m.lat, lng:m.lng, label:first(m.name), initial:initial(m.name), photo:m.photo, state:STN[st[3]], statusText:stText(m, st[3]), act:ze ? null : 'member', z:4 - st[3], color:st[2], trail:S.trails[m.id] }; });
   S.members.filter(m => !hasLoc(m)).forEach(m => { counts[memberState(m, alertIds.has(m.id))[3]]++; });
   if (!ze) open.filter(a => a.lat != null && a.type !== 'zone').forEach(a => pts.push({ id:a.userId, lat:a.lat, lng:a.lng, label:'SOS', initial:'!', state:'sos', statusText:`${first(a.userName)} · موقع البلاغ`, act:'member', color:'#E5484D', z:6 }));
   const liveN = S.members.filter(isOnline).length;
@@ -1156,7 +1284,7 @@ function alertCard(a){
       <a class="action${a.lat != null ? '' : ' disabled'}" href="${a.lat != null ? gmaps(a.lat, a.lng) : '#'}" target="_blank" rel="noopener"><span class="ib">${I('map')}</span>الموقع</a>
       ${m ? `<button class="action" data-act="member" data-id="${esc(m.id)}"><span class="ib">${I('user')}</span>الملف</button>` : `<span class="action disabled"><span class="ib">${I('user')}</span>الملف</span>`}
     </div>
-    ${open ? `<button class="btn block" data-act="resolve" data-id="${esc(a.id)}">${I('check')}تم التعامل مع البلاغ</button>` : ''}
+    ${open && S.me.role === 'supervisor' ? `<button class="btn block" data-act="resolve" data-id="${esc(a.id)}">${I('check')}تم التعامل مع البلاغ</button>` : ''}
   </div>`;
 }
 function medCard(m, compact){
@@ -1174,6 +1302,7 @@ function vSGroup(){
   if (!g) return head + noGroup();
   return head + `
     ${S.groups.length > 1 ? `<div class="pills" style="margin-bottom:14px">${S.groups.map(x => `<button class="pill" data-act="pickGroup" data-id="${esc(x.id)}" aria-pressed="${x.id === S.selGroupId}">${esc(x.name)}</button>`).join('')}</div>` : ''}
+    <div class="card row" style="margin-bottom:10px"><div class="ib ${g.campaignId ? 'success' : 'muted'}">${I('crown')}</div><div class="grow"><div class="muted xs">الحملة</div><div style="font-weight:600">${g.campaignId ? 'مرتبطة بحملة ✓' : 'غير مرتبطة بحملة'}</div></div><button class="btn ghost sm" data-act="linkCamp">${g.campaignId ? 'تغيير' : 'ربط بحملة'}</button></div>
     ${inviteCard(g)}
     <div class="grid2" style="margin-top:10px"><button class="btn ghost sm" data-act="editGroup">${I('edit')}تعديل المجموعة</button><button class="btn ghost sm" data-act="newCode">${I('refresh')}رمز جديد</button></div>
     <div class="section-title"><h2>الرحلة القادمة</h2></div>
@@ -1216,9 +1345,180 @@ function confirmBox(title, body, act, label, danger, extra){
     <div class="grid2"><button class="btn ghost" data-act="close">إلغاء</button><button class="btn${danger ? ' danger' : ''}" data-act="${act}"${extra || ''}>${esc(label)}</button></div>`, { center:true });
 }
 
+
+/* ---------------- journey views ---------------- */
+function logisticsCard(g, forSup){
+  const rows = [['tent', 'المخيم / السكن', g.camp], ['bus', 'الباص', g.bus ? `${g.bus}${g.plate ? ` · لوحة ${g.plate}` : ''}` : ''], ['flag', 'بوابة الوصول', g.gate], ['user', 'المشرف', g.supervisorName]];
+  return `<div class="card stack">
+    <div class="row"><div class="ib">${I('tent')}</div><div class="grow"><h2>بيانات الرحلة</h2><p class="muted sm">${esc(g.name)}</p></div>${forSup ? `<button class="btn soft sm" data-act="tripInfo">${I('edit')}تعديل</button>` : (g.supervisorPhone ? `<a class="iconbtn" style="background:var(--success-50);color:var(--success);border:none" href="tel:${esc(g.supervisorPhone)}" aria-label="اتصال بالمشرف">${I('phone')}</a>` : '')}</div>
+    <div class="list" style="padding:0">${rows.map(r => `<div class="li row"><div class="ib sm">${I(r[0])}</div><div class="grow"><div class="muted xs">${r[1]}</div><div style="font-weight:600">${r[2] ? esc(r[2]) : '—'}</div></div></div>`).join('')}</div>
+  </div>`;
+}
+function noticeList(g, max){
+  const ns = noticesOf(g).slice(0, max || 3);
+  if (!ns.length) return '';
+  return `<div class="section-title"><h2>الإعلانات</h2></div><div class="stack sm">${ns.map(n => `<div class="card row top" style="padding:14px"><div class="ib sm">${I('mega')}</div><div class="grow"><p style="font-weight:500;line-height:1.7">${esc(n.text)}</p><p class="muted xs" style="margin-top:4px">${esc(fmtDT(n.at))}</p></div></div>`).join('')}</div>`;
+}
+function stepCard(g, m, s, i, forSup){
+  const st = forSup ? (i < (g.openIndex || 0) ? 'done' : i === (g.openIndex || 0) ? 'now' : 'locked') : stepStatus(g, m, i);
+  const act = s.type === 'activity', joined = act && (m.activities || []).includes(s.id);
+  const total = travelers().length, done = forSup ? stepDone(i) : 0;
+  const dir = (s.lat != null) ? `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=walking` : null;
+  const chip = st === 'done' ? '<span class="chip success">تم</span>' : st === 'now' ? '<span class="chip primary dot">الخطوة الحالية</span>' : '<span class="chip muted">قادمة</span>';
+  let actions = '';
+  if (!forSup){
+    if (act && st !== 'locked') actions = joined
+      ? `<div class="row" style="gap:8px"><span class="chip success">مسجّل ✓</span><button class="linkbtn" data-act="activityLeave" data-id="${esc(s.id)}">إلغاء التسجيل</button></div>`
+      : `<button class="btn soft block sm" data-act="activityJoin" data-id="${esc(s.id)}">${I('plus')}أرغب بالمشاركة</button>`;
+    if (st === 'now' && (!act || joined)) actions += `<button class="btn block sm" style="margin-top:8px" data-act="stepMark" data-i="${i}">${I('check')}أنهيت هذه الخطوة</button>`;
+    if (st === 'locked') actions = `<p class="muted sm">${I('lock', 'width:15px;height:15px;vertical-align:-2px')} تُفتح بإذن المشرف أو بعد انتهاء المجموعة من الخطوة السابقة</p>`;
+  } else {
+    const late = travelers().filter(x => (x.progress || 0) <= i);
+    actions = `<div style="margin-top:6px"><div class="row between xs muted"><span>${done} من ${total} أنهوا</span><span>${total ? Math.round(done / total * 100) : 0}%</span></div>
+      <div class="bar"><span style="width:${total ? done / total * 100 : 0}%"></span></div></div>`;
+    if (act) actions += `<p class="muted sm" style="margin-top:8px">المسجّلون في النشاط: ${travelers().filter(x => (x.activities || []).includes(s.id)).length} من ${total}</p>`;
+    if (st === 'now'){
+      actions += `<button class="btn block sm" style="margin-top:10px" data-act="openNext" data-i="${i}">${I('lockOpen')}فتح الخطوة التالية للجميع</button>`;
+      if (late.length) actions += `<div class="section-title" style="margin:14px 0 8px"><h2>لم ينهوا بعد (${late.length})</h2></div>
+        <div class="list" style="padding:0">${late.slice(0, 8).map(x => `<div class="li row">${avatar(x, false, 34)}<div class="grow" style="font-weight:600">${esc(x.name)}</div><button class="btn ghost sm" data-act="unlockMember" data-id="${esc(x.id)}" data-i="${i}">اسمح له</button></div>`).join('')}</div>`;
+    }
+    actions += `<div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost sm grow" data-act="stepEdit" data-id="${esc(s.id)}">${I('edit')}تعديل</button><button class="iconbtn" data-act="stepMove" data-id="${esc(s.id)}" data-dir="-1" aria-label="أعلى">▲</button><button class="iconbtn" data-act="stepMove" data-id="${esc(s.id)}" data-dir="1" aria-label="أسفل">▼</button><button class="iconbtn" style="color:var(--danger)" data-act="stepDelete" data-id="${esc(s.id)}" aria-label="حذف">${I('x')}</button></div>`;
+  }
+  return `<div class="step ${st}">
+    <div class="step-mark">${st === 'done' ? I('check') : st === 'locked' ? I('lock') : String(i + 1)}</div>
+    <div class="card grow stack sm" style="padding:16px">
+      <div class="row between"><h3>${esc(s.title)}${act ? ' <span class="chip warning">نشاط اختياري</span>' : ''}</h3>${chip}</div>
+      ${s.at ? `<p class="ink2 sm">${I('clock', 'width:15px;height:15px;vertical-align:-2px')} ${esc(fmtDT(s.at))}</p>` : ''}
+      ${s.placeName ? `<p class="ink2 sm">${I('pin', 'width:15px;height:15px;vertical-align:-2px')} ${esc(s.placeName)}</p>` : ''}
+      ${s.notes ? `<p class="muted sm">${esc(s.notes)}</p>` : ''}
+      ${dir ? `<a class="btn ghost sm" href="${dir}" target="_blank" rel="noopener">${I('route')}الاتجاهات للمكان</a>` : ''}
+      ${actions}
+    </div></div>`;
+}
+function vTTrip(){
+  const g = S.group, m = S.me;
+  if (!g) return `<h1>رحلتي</h1><div class="card" style="margin-top:14px"><p class="ink2">انضم إلى مجموعتك أولًا، وبعدها يظهر لك مسار الرحلة كاملًا من المطار إلى العودة.</p><button class="btn block" style="margin-top:12px" data-act="tab" data-v="home">الانضمام الآن</button></div>`;
+  const steps = stepsOf(g), next = steps.findIndex((s, i) => stepStatus(g, m, i) !== 'done');
+  return `<h1>رحلتي</h1><p class="muted" style="margin:2px 0 14px">${steps.length ? `الخطوة ${next < 0 ? steps.length : next + 1} من ${steps.length}` : 'لم يُضف مسار الرحلة بعد'}</p>
+    ${logisticsCard(g, false)}
+    ${noticeList(g, 3)}
+    <div class="section-title"><h2>مسار الرحلة</h2></div>
+    ${steps.length ? `<div class="steps-wrap">${steps.map((s, i) => stepCard(g, m, s, i, false)).join('')}</div>`
+      : `<div class="card"><p class="muted">سيضيف المشرف خطوات الرحلة قريبًا (الوصول، السكن، المناسك، العودة).</p></div>`}`;
+}
+function vSTrip(){
+  const g = selGroup(); if (!g) return sHeader('الرحلة') + noGroup();
+  const steps = stepsOf(g);
+  return sHeader('الرحلة') + `
+    ${logisticsCard(g, true)}
+    <div class="section-title"><h2>إعلان للمجموعة</h2></div>
+    <div class="card stack">
+      <textarea class="in" data-draft="notice" placeholder="اكتب إعلانًا يصل لكل أعضاء المجموعة…">${esc(val('notice'))}</textarea>
+      <div class="pills">${['الباص سيتحرك بعد 15 دقيقة، توجهوا للبوابة', 'أظهروا الباركود عند الصعود للباص', 'التجمع بعد صلاة المغرب عند مدخل المخيم'].map((t, i) => `<button class="pill" data-act="noticeTpl" data-i="${i}">${esc(t.slice(0, 24))}…</button>`).join('')}</div>
+      <button class="btn block" data-act="sendNotice">${I('mega')}إرسال الإعلان</button>
+    </div>
+    ${noticeList(g, 5)}
+    <div class="section-title"><h2>مسار الرحلة (${steps.length})</h2><button class="btn soft sm" data-act="stepNew">${I('plus')}خطوة</button></div>
+    ${steps.length ? `<div class="steps-wrap">${steps.map((s, i) => stepCard(g, S.me, s, i, true)).join('')}</div>`
+      : `<div class="card"><p class="ink2">أضف خطوات الرحلة بالترتيب: الوصول للمطار، الانتقال للمخيم، العمرة، المشاعر، ثم العودة. يرى الحاج خطوته الحالية فقط، ولا تُفتح التالية إلا بإذنك أو بعد أن ينهي الجميع.</p></div>`}`;
+}
+function tripInfoSheet(){
+  return `<div class="row" style="margin-bottom:16px"><h2 class="grow" style="font-size:20px">بيانات الرحلة</h2><button class="iconbtn" data-act="close" aria-label="إغلاق">${I('x')}</button></div>
+    <div class="stack lg">
+      ${field('المخيم / السكن', `<input class="in" data-w="camp" value="${esc(S.wiz.camp)}" placeholder="مثال: مخيم منى — المربع 12">`)}
+      <div class="grid2">${field('رقم الباص', `<input class="in" data-w="bus" value="${esc(S.wiz.bus)}" placeholder="7">`)}${field('لوحة الباص', `<input class="in" data-w="plate" value="${esc(S.wiz.plate)}" placeholder="ا ب ج 1234">`)}</div>
+      ${field('بوابة الوصول', `<input class="in" data-w="gate" value="${esc(S.wiz.gate)}" placeholder="مثال: صالة 1 — بوابة 5">`)}
+      <div class="foot" style="background:linear-gradient(to top,var(--bg) 70%,transparent)"><button class="btn block" data-act="tripInfoSave">حفظ</button></div>
+    </div>`;
+}
+function stepSheet(){
+  const s = S.stepEdit;
+  return `<div class="row" style="margin-bottom:16px"><h2 class="grow" style="font-size:20px">${s.id ? 'تعديل الخطوة' : 'خطوة جديدة'}</h2><button class="iconbtn" data-act="close" aria-label="إغلاق">${I('x')}</button></div>
+    <div class="stack lg">
+      ${field('عنوان الخطوة', `<input class="in" data-s="title" value="${esc(s.title)}" placeholder="مثال: الوصول لمطار جدة">`)}
+      <div><div class="field"><span>نوع الخطوة</span></div><div class="pills">
+        <button class="pill" data-act="stepType" data-v="stop" aria-pressed="${s.type !== 'activity'}">محطة إلزامية</button>
+        <button class="pill" data-act="stepType" data-v="activity" aria-pressed="${s.type === 'activity'}">نشاط اختياري</button></div>
+        <small class="muted" style="display:block;margin-top:6px">النشاط الاختياري يسجّل فيه من يرغب فقط، مثل عمرة بعد المغرب.</small></div>
+      ${field('الموعد', `<input class="in" type="datetime-local" data-s="atStr" value="${esc(s.atStr)}">`, 'اختياري')}
+      ${field('اسم المكان', `<input class="in" data-s="placeName" value="${esc(s.placeName)}" placeholder="مثال: المسجد الحرام">`)}
+      <button class="btn ghost block sm" data-act="stepHere">${I('target')}${s.lat != null ? 'تم تحديد الموقع ✓ — تحديث' : 'استخدم موقعي الحالي كمكان'}</button>
+      ${field('ملاحظات للحجاج', `<textarea class="in" data-s="notes" placeholder="مثال: أحضروا بطاقاتكم وتجمعوا عند البوابة">${esc(s.notes)}</textarea>`)}
+      <div class="foot" style="background:linear-gradient(to top,var(--bg) 70%,transparent)"><button class="btn block" data-act="stepSave">حفظ الخطوة</button></div>
+    </div>`;
+}
+
+/* ---------------- admin views ---------------- */
+function vAWizard(){
+  if (!S.campLoaded) return center(spinner(true));
+  if (!S.wiz) S.wiz = { cname:'' };
+  return `<div class="row between" style="margin:4px 0 22px">${brand()}<button class="iconbtn" data-act="logout" aria-label="تسجيل الخروج">${I('out')}</button></div>
+    <p class="muted sm">أهلًا ${esc(first(S.me.name))} 👋</p><h1 style="font-size:24px">أنشئ حملتك</h1>
+    <p class="muted" style="margin:2px 0 22px">ستحصل على رمز حملة تعطيه للمشرفين ليربطوا مجموعاتهم بها، فترى جميع الحجاج والمشرفين في مكان واحد.</p>
+    ${field('اسم الحملة', `<input class="in" data-w="cname" value="${esc(S.wiz.cname)}" placeholder="مثال: حملة النور للحج">`)}
+    <div class="foot"><button class="btn block" data-act="createCampaign"${S.busy.camp ? ' disabled' : ''}>${S.busy.camp ? spinner() : 'إنشاء الحملة'}</button></div>`;
+}
+const aHeader = title => `<div class="row between" style="margin-bottom:14px">${brand()}<button class="iconbtn" data-act="logout" aria-label="تسجيل الخروج">${I('out')}</button></div><h1 style="margin-bottom:14px">${title}</h1>`;
+function vADash(){
+  const c = S.campaign, trav = travelers();
+  const online = trav.filter(isOnline).length, open = S.alerts.filter(a => a.status === 'open');
+  return aHeader(esc(c.name)) + `
+    ${open.length ? `<div class="card tap row alert" style="background:var(--danger-50);margin-bottom:12px" data-act="gotoAlerts" tabindex="0"><div class="ib danger" style="background:var(--card)">${I('alert')}</div><div class="grow" style="color:var(--danger)"><h2>${open.length} تنبيه مفتوح في الحملة</h2><p class="sm">اضغط للتفاصيل</p></div></div>` : ''}
+    <div class="grid2" style="grid-template-columns:repeat(4,1fr);gap:8px">
+      <div class="legend-c lg-on"><b>${online}</b><span>متصل</span></div>
+      <div class="legend-c lg-off"><b>${trav.length}</b><span>حاج</span></div>
+      <div class="legend-c lg-out"><b>${S.groups.length}</b><span>مجموعة</span></div>
+      <div class="legend-c lg-sos"><b>${open.length}</b><span>تنبيهات</span></div>
+    </div>
+    <div class="section-title"><h2>المجموعات</h2></div>
+    ${S.groups.length ? `<div class="stack sm">${S.groups.map(g => {
+      const ms = S.members.filter(m => m.groupId === g.id && m.role !== 'supervisor');
+      const on = ms.filter(isOnline).length, al = S.alerts.filter(a => a.status === 'open' && a.groupId === g.id).length;
+      const steps = stepsOf(g), cur = steps[g.openIndex || 0];
+      return `<div class="card row" style="padding:14px"><div class="ib">${I('users')}</div>
+        <div class="grow"><div style="font-weight:700">${esc(g.name)}</div>
+          <div class="muted xs">${esc(g.supervisorName || 'بدون مشرف')} · ${ms.length} حاج · ${on} متصل${cur ? ` · ${esc(cur.title)}` : ''}</div></div>
+        ${al ? `<span class="chip danger">${al}</span>` : `<span class="chip ${on ? 'success' : 'muted'} dot">${on ? 'نشطة' : 'هادئة'}</span>`}</div>`;
+    }).join('')}</div>` : `<div class="card"><p class="ink2">لا توجد مجموعات بعد. أعطِ المشرفين رمز الحملة <b class="ltr">${esc(c.code)}</b> ليربطوا مجموعاتهم.</p></div>`}
+    <div class="section-title"><h2>الحجاج (${trav.length})</h2></div>
+    ${trav.length ? `<div class="stack sm">${trav.slice(0, 40).map(m => memberRow(m, S.alerts.some(a => a.status === 'open' && a.type !== 'zone' && a.userId === m.id))).join('')}</div>` : `<p class="muted">لم ينضم أحد بعد.</p>`}`;
+}
+function vAMap(){
+  const open = S.alerts.filter(a => a.status === 'open'), alertIds = new Set(open.filter(a => a.type !== 'zone').map(a => a.userId));
+  const STN = ['sos', 'outside', 'offline', 'online'];
+  const stText = (m, i) => i === 0 ? 'يحتاج مساعدة' : i === 1 ? 'خارج النطاق' : i === 3 ? 'متصل الآن' : `غير متصل · ${ago(m.updatedAt)}`;
+  const counts = [0, 0, 0, 0];
+  const pts = S.members.filter(hasLoc).map(m => { const st = memberState(m, alertIds.has(m.id)); counts[st[3]]++; return { id:m.id, lat:m.lat, lng:m.lng, label:first(m.name), initial:initial(m.name), photo:m.photo, state:STN[st[3]], statusText:stText(m, st[3]), act:'member', z:4 - st[3], color:st[2], trail:S.trails[m.id] }; });
+  let zones = [];
+  S.groups.forEach(g => { zones = zones.concat(zonesOf(g)); });
+  return aHeader('خريطة الحملة') + `
+    <div class="grid2" style="grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+      <div class="legend-c lg-on"><b>${counts[3]}</b><span>متصل</span></div>
+      <div class="legend-c lg-off"><b>${counts[2]}</b><span>غير متصل</span></div>
+      <div class="legend-c lg-out"><b>${counts[1]}</b><span>خارج النطاق</span></div>
+      <div class="legend-c lg-sos"><b>${counts[0]}</b><span>طوارئ</span></div></div>
+    ${liveMap(pts, { key:'camp:' + S.campaign.id, zones, empty:'ستظهر مواقع الحجاج هنا فور مشاركتها' })}`;
+}
+function vAAlerts(){
+  const open = S.alerts.filter(a => a.status === 'open'), shown = S.alertFilter === 'open' ? open : S.alerts;
+  return aHeader('تنبيهات الحملة') + `
+    <div class="pills" style="margin-bottom:14px">${pill('afilter', `المفتوحة (${open.length})`, S.alertFilter === 'open', ' data-f="open"')}${pill('afilter', `الكل (${S.alerts.length})`, S.alertFilter === 'all', ' data-f="all"')}</div>
+    ${shown.length ? `<div class="stack">${shown.map(alertCard).join('')}</div>` : `<div class="card"><p class="muted">لا توجد تنبيهات.</p></div>`}`;
+}
+function vACamp(){
+  const c = S.campaign, sups = S.members.filter(m => m.role === 'supervisor');
+  return aHeader('الحملة') + `
+    <div class="card stack center"><h2>${esc(c.name)}</h2><p class="ink2">رمز الحملة للمشرفين</p><div class="code">${esc(c.code)}</div>
+      <p class="muted sm">يدخله المشرف عند إنشاء مجموعته، أو من «المجموعة ← ربط بحملة».</p>
+      <button class="btn block" data-act="copyCampCode">${I('copy')}نسخ رمز الحملة</button></div>
+    <div class="section-title"><h2>المشرفون (${sups.length})</h2></div>
+    ${sups.length ? `<div class="card list">${sups.map(m => `<div class="li row">${avatar(m, false, 40)}<div class="grow"><div style="font-weight:600">${esc(m.name)}</div><div class="muted xs">${esc(S.groups.filter(g => g.supervisorId === m.id).map(g => g.name).join('، ') || 'بدون مجموعة')}</div></div>${m.phone ? `<a class="iconbtn" href="tel:${esc(m.phone)}" aria-label="اتصال">${I('phone')}</a>` : ''}</div>`).join('')}</div>` : `<div class="card"><p class="muted">لم ينضم مشرف بعد.</p></div>`}`;
+}
+
 /* ---------------- render ---------------- */
-const T_TABS = [['home', 'الرئيسية', 'home'], ['loc', 'موقعي', 'pin'], ['me', 'ملفي', 'user']];
-const S_TABS = [['dash', 'الرئيسية', 'grid'], ['map', 'الخريطة', 'map'], ['alerts', 'البلاغات', 'bell'], ['group', 'المجموعة', 'users']];
+const T_TABS = [['home', 'الرئيسية', 'home'], ['trip', 'رحلتي', 'route'], ['loc', 'موقعي', 'pin'], ['me', 'ملفي', 'user']];
+const S_TABS = [['dash', 'الرئيسية', 'grid'], ['trip', 'الرحلة', 'route'], ['map', 'الخريطة', 'map'], ['alerts', 'البلاغات', 'bell'], ['group', 'المجموعة', 'users']];
+const A_TABS = [['dash', 'الرئيسية', 'grid'], ['map', 'الخريطة', 'map'], ['alerts', 'التنبيهات', 'bell'], ['camp', 'الحملة', 'crown']];
 const splash = () => center(`${brand('xl')}<div style="margin-top:26px;display:grid;place-items:center">${spinner(true)}</div>`);
 function render(){
   renderPending = false;
@@ -1229,17 +1529,20 @@ function render(){
   else if (!S.user) html = vAuth();
   else if (!S.meLoaded) html = splash();
   else if (!S.me) html = vNoProfile();
-  else if (!S.me.onboarded) html = S.me.role === 'supervisor' ? vSWizard() : vTWizard();
+  else if (S.me.role === 'admin' && !S.campaign) html = vAWizard();
+  else if (!S.me.onboarded && S.me.role !== 'admin') html = S.me.role === 'supervisor' ? vSWizard() : vTWizard();
   if (html !== null){ v.className = 'app' + (bare ? ' bare' : ''); v.innerHTML = html; nav.innerHTML = ''; return; }
   v.className = 'app';
-  const trav = S.me.role !== 'supervisor', tabs = trav ? T_TABS : S_TABS;
+  const role = S.me.role, tabs = role === 'admin' ? A_TABS : role === 'supervisor' ? S_TABS : T_TABS;
   if (!tabs.some(t => t[0] === S.tab)) S.tab = tabs[0][0];
-  const views = trav ? { home:vTHome, loc:vTLoc, me:vTMe } : { dash:vSDash, map:vSMap, alerts:vSAlerts, group:vSGroup };
+  const views = role === 'admin' ? { dash:vADash, map:vAMap, alerts:vAAlerts, camp:vACamp }
+    : role === 'supervisor' ? { dash:vSDash, trip:vSTrip, map:vSMap, alerts:vSAlerts, group:vSGroup }
+    : { home:vTHome, trip:vTTrip, loc:vTLoc, me:vTMe };
   const y = window.scrollY;
   v.innerHTML = views[S.tab]();
   try{ mountMap(); }catch(e){ console.warn('map', e); }
   window.scrollTo(0, y);
-  const openCount = trav ? 0 : S.alerts.filter(a => a.status === 'open').length;
+  const openCount = role === 'traveler' ? 0 : S.alerts.filter(a => a.status === 'open').length;
   nav.innerHTML = `<div class="in-nav" style="--n:${tabs.length}">${tabs.map(t => `<button class="navbtn" data-act="tab" data-v="${t[0]}"${S.tab === t[0] ? ' aria-current="page"' : ''}><span class="p">${I(t[2])}</span>${t[1]}${t[0] === 'alerts' && openCount ? `<span class="badge">${openCount}</span>` : ''}</button>`).join('')}</div>`;
 }
 function refresh(){ if (S.editing) setSheet(S.editing === 'group' ? groupSheet(!!S.editingGroup) : editSheet(S.editing)); else render(); }
@@ -1259,7 +1562,7 @@ async function uniqueCode(){
 const meRef = () => db.doc('members/' + S.user.uid);
 function newMember(name, role){
   return { name:name.trim(), phone:'', role, groupId:null, age:'', nationality:'', bloodType:'', allergies:'', diseases:'', medications:'',
-    emergencyName:'', emergencyRelation:'', emergencyContact:'', sharing:true, onboarded:false, qrKey:genKey(), createdAt:Date.now() };
+    emergencyName:'', emergencyRelation:'', emergencyContact:'', photo:'', campaignId:null, progress:0, unlocked:0, activities:[], sharing:true, onboarded:false, qrKey:genKey(), createdAt:Date.now() };
 }
 async function joinByCode(raw){
   const code = normCode(raw);
@@ -1272,6 +1575,12 @@ async function joinByCode(raw){
 function groupFromWiz(){
   const w = S.wiz || {};
   return { name:(w.gname || '').trim(), tripTitle:(w.gtrip || '').trim(), meetingPoint:(w.gmeet || '').trim(), tripTime:w.gtime ? new Date(w.gtime).getTime() : null };
+}
+async function campaignIdFromCode(raw){
+  const code = normCode(raw); if (!code) return null;
+  const d = await db.doc('campaignCodes/' + code).get();
+  if (!d.exists) { toast('رمز الحملة غير صحيح — أُنشئت المجموعة بدون حملة.'); return null; }
+  return d.data().campaignId;
 }
 
 const A = {
@@ -1381,7 +1690,7 @@ const A = {
     let f = S.fix && Date.now() - S.fix.t < 60000 ? S.fix : null;
     if (!f) f = (await getOnce(10000)) || S.fix;
     const me = S.me, now = Date.now();
-    const alert = { groupId:me.groupId, userId:S.user.uid, userName:me.name, userPhone:me.phone || '', lat:f ? f.lat : null, lng:f ? f.lng : null, acc:f ? (f.acc || null) : null, createdAt:now, status:'open' };
+    const alert = { groupId:me.groupId, campaignId:me.campaignId || null, userId:S.user.uid, userName:me.name, userPhone:me.phone || '', lat:f ? f.lat : null, lng:f ? f.lng : null, acc:f ? (f.acc || null) : null, createdAt:now, status:'open' };
     let state = 'ok';
     try{ await withTimeout(db.collection('alerts').add(alert), 12000); }catch(e){ state = e && e.message === 'timeout' ? 'pending' : 'fail'; }
     delete m.dataset.locked;
@@ -1408,6 +1717,103 @@ const A = {
   async newQr(){ const key = genKey(); try{ await meRef().update({ qrKey:key }); setSheet(qrSheet(key)); toast('تم إنشاء باركود جديد، القديم لم يعد يعمل'); }catch(e){ toast('تعذّر التحديث.'); } },
 
   focusMember(d){ closeModal(); S.zoneEdit = null; S.focusId = d.id; S.tab = 'map'; render(); window.scrollTo(0, 0); },
+
+  /* trip info & notices */
+  tripInfo(){ const g = selGroup(); if (!g) return; S.wiz = { camp:g.camp || '', bus:g.bus || '', plate:g.plate || '', gate:g.gate || '' }; S.editing = 'trip'; openModal(tripInfoSheet()); },
+  async tripInfoSave(){
+    const g = selGroup(), w = S.wiz; if (!g) return; closeModal();
+    try{ await db.doc('groups/' + g.id).update({ camp:(w.camp || '').trim(), bus:(w.bus || '').trim(), plate:(w.plate || '').trim(), gate:(w.gate || '').trim(), supervisorName:S.me.name, supervisorPhone:S.me.phone || '' }); S.wiz = null; toast('تم حفظ بيانات الرحلة ✓'); }
+    catch(e){ toast('تعذّر الحفظ.'); }
+  },
+  noticeTpl(d){ const t = ['الباص سيتحرك بعد 15 دقيقة، توجهوا للبوابة', 'أظهروا الباركود عند الصعود للباص', 'التجمع بعد صلاة المغرب عند مدخل المخيم'][Number(d.i)]; S.draft.notice = t; render(); },
+  async sendNotice(){
+    const g = selGroup(), text = String(S.draft.notice || '').trim();
+    if (!g) return; if (text.length < 3) return toast('اكتب نص الإعلان.');
+    const notices = [{ id:'n' + genKey().slice(0, 8), text, at:Date.now(), by:S.me.name }].concat(noticesOf(g)).slice(0, 20);
+    try{ await db.doc('groups/' + g.id).update({ notices }); delete S.draft.notice; render(); toast('وصل الإعلان لكل أعضاء المجموعة ✓'); }
+    catch(e){ toast('تعذّر الإرسال.'); }
+  },
+
+  /* steps */
+  stepNew(){ S.stepEdit = { id:null, title:'', type:'stop', atStr:'', placeName:'', notes:'', lat:null, lng:null }; S.editing = 'step'; openModal(stepSheet()); },
+  stepEdit(d){
+    const s = stepsOf(selGroup()).find(x => x.id === d.id); if (!s) return;
+    S.stepEdit = { id:s.id, title:s.title || '', type:s.type || 'stop', atStr:toLocalInput(s.at), placeName:s.placeName || '', notes:s.notes || '', lat:s.lat != null ? s.lat : null, lng:s.lng != null ? s.lng : null };
+    S.editing = 'step'; openModal(stepSheet());
+  },
+  stepType(d){ S.stepEdit.type = d.v; setSheet(stepSheet()); },
+  async stepHere(){ toast('جارٍ تحديد موقعك…'); const f = await getOnce(10000); if (!f) return toast('تعذّر تحديد الموقع.'); S.stepEdit.lat = f.lat; S.stepEdit.lng = f.lng; setSheet(stepSheet()); toast('تم تحديد مكان الخطوة ✓'); },
+  async stepSave(){
+    const g = selGroup(), e = S.stepEdit; if (!g || !e) return;
+    const title = String(e.title || '').trim(); if (!title) return toast('اكتب عنوان الخطوة.');
+    const step = { id:e.id || ('s' + genKey().slice(0, 8)), title, type:e.type === 'activity' ? 'activity' : 'stop', at:e.atStr ? new Date(e.atStr).getTime() : null, placeName:String(e.placeName || '').trim(), notes:String(e.notes || '').trim(), lat:e.lat, lng:e.lng };
+    const steps = stepsOf(g).slice(), i = steps.findIndex(x => x.id === step.id);
+    if (i >= 0) steps[i] = step; else steps.push(step);
+    closeModal();
+    try{ await db.doc('groups/' + g.id).update({ steps }); S.stepEdit = null; toast('تم حفظ الخطوة ✓'); }catch(err){ toast('تعذّر الحفظ.'); }
+  },
+  stepDelete(d){ const s = stepsOf(selGroup()).find(x => x.id === d.id); if (s) confirmBox('حذف الخطوة', `حذف «${s.title}» من مسار الرحلة؟`, 'stepDoDelete', 'حذف', true, ` data-id="${esc(s.id)}"`); },
+  async stepDoDelete(d){ closeModal(); const g = selGroup(); if (!g) return; try{ await db.doc('groups/' + g.id).update({ steps:stepsOf(g).filter(x => x.id !== d.id) }); toast('تم الحذف'); }catch(e){ toast('تعذّر الحذف.'); } },
+  async stepMove(d){
+    const g = selGroup(); if (!g) return;
+    const steps = stepsOf(g).slice(), i = steps.findIndex(x => x.id === d.id), j = i + Number(d.dir);
+    if (i < 0 || j < 0 || j >= steps.length) return;
+    const t = steps[i]; steps[i] = steps[j]; steps[j] = t;
+    try{ await db.doc('groups/' + g.id).update({ steps }); }catch(e){ toast('تعذّر الترتيب.'); }
+  },
+  async openNext(d){
+    const g = selGroup(); if (!g) return;
+    try{ await db.doc('groups/' + g.id).update({ openIndex:Number(d.i) + 1 }); toast('فُتحت الخطوة التالية للجميع ✓'); }catch(e){ toast('تعذّر الفتح.'); }
+  },
+  async unlockMember(d){
+    try{ await db.doc('members/' + d.id).update({ unlocked:Number(d.i) + 1 }); toast('سُمح له بالتقدم للخطوة التالية ✓'); }catch(e){ toast('تعذّر السماح. تأكد أنه عضو في مجموعتك.'); }
+  },
+
+  /* traveler journey */
+  async stepMark(d){
+    const i = Number(d.i);
+    try{ await meRef().update({ progress:i + 1 }); vibrate(60); toast('تم ✓ بالتوفيق في الخطوة التالية'); }catch(e){ toast('تعذّر الحفظ.'); }
+  },
+  async activityJoin(d){
+    const list = (S.me.activities || []).concat([d.id]);
+    try{ await meRef().update({ activities:list }); toast('تم تسجيلك في النشاط ✓'); }catch(e){ toast('تعذّر التسجيل.'); }
+  },
+  async activityLeave(d){
+    const list = (S.me.activities || []).filter(x => x !== d.id);
+    try{ await meRef().update({ activities:list }); toast('أُلغي تسجيلك'); }catch(e){ toast('تعذّر الإلغاء.'); }
+  },
+
+  /* campaign */
+  async createCampaign(){
+    const name = String((S.wiz && S.wiz.cname) || '').trim();
+    if (name.length < 2) return toast('اكتب اسم الحملة.');
+    busy('camp', true);
+    try{
+      let code = null;
+      for (let i = 0; i < 8; i++){ const c = genCode(); const d = await db.doc('campaignCodes/' + c).get(); if (!d.exists){ code = c; break; } }
+      const ref = db.collection('campaigns').doc();
+      await ref.set({ name, code, adminId:S.user.uid, adminName:S.me.name, createdAt:Date.now() });
+      await db.doc('campaignCodes/' + code).set({ campaignId:ref.id, adminId:S.user.uid, createdAt:Date.now() });
+      await meRef().update({ campaignId:ref.id, onboarded:true });
+      S.wiz = null; toast(`تم إنشاء الحملة — الرمز ${code}`);
+    }catch(e){ console.warn(e); toast('تعذّر إنشاء الحملة.'); }
+    busy('camp', false);
+  },
+  copyCampCode(){ const c = S.campaign; if (c) copyText(`رمز حملة «${c.name}» في تطبيق رِفق: ${c.code}\nافتح ${SITE_URL} وأنشئ حساب «مشرف»، ثم أدخل الرمز عند إنشاء مجموعتك.`, 'تم نسخ رمز الحملة'); },
+  linkCamp(){
+    openModal(`<div class="row" style="margin-bottom:14px"><h2 class="grow" style="font-size:20px">ربط المجموعة بحملة</h2><button class="iconbtn" data-act="close" aria-label="إغلاق">${I('x')}</button></div>
+      <p class="muted sm" style="margin-bottom:14px">أدخل رمز الحملة الذي أعطاك إياه الإداري.</p>
+      <input class="in code" maxlength="8" data-draft="campcode" value="" placeholder="ABC234" autocapitalize="characters">
+      <button class="btn block" style="margin-top:14px" data-act="linkCampSave">ربط</button>`);
+  },
+  async linkCampSave(){
+    const g = selGroup(); if (!g) return;
+    const cid = await campaignIdFromCode(S.draft.campcode || '');
+    if (!cid) return;
+    closeModal();
+    try{ await db.doc('groups/' + g.id).update({ campaignId:cid }); await meRef().update({ campaignId:cid }); delete S.draft.campcode; toast('تم ربط المجموعة بالحملة ✓'); }
+    catch(e){ toast('تعذّر الربط.'); }
+  },
 
   /* zones */
   zoneNew(){
@@ -1442,15 +1848,17 @@ const A = {
   async createGroup(){
     const data = groupFromWiz();
     if (!data.name) return toast('اكتب اسم المجموعة.');
-    Object.assign(data, { supervisorId:S.user.uid, createdAt:Date.now() });
+    Object.assign(data, { supervisorId:S.user.uid, supervisorName:S.me.name, supervisorPhone:S.me.phone || '', campaignId:S.me.campaignId || null, openIndex:0, steps:[], notices:[], createdAt:Date.now() });
     const inWizard = !S.me.onboarded;
     if (inWizard) busy('group', true); else closeModal();
     try{
+      if (S.wiz && S.wiz.gcamp) data.campaignId = await campaignIdFromCode(S.wiz.gcamp);
       data.code = await uniqueCode();
       const ref = db.collection('groups').doc(), batch = db.batch();
       batch.set(ref, data);
       batch.set(db.doc('codes/' + data.code), { groupId:ref.id, supervisorId:S.user.uid, createdAt:Date.now() });
       await batch.commit();
+      if (data.campaignId && data.campaignId !== S.me.campaignId) await meRef().update({ campaignId:data.campaignId }).catch(() => {});
       if (inWizard) await meRef().update({ onboarded:true });
       scope(ref.id); S.wiz = null; S.tab = inWizard ? 'dash' : 'group'; toast(`تم إنشاء المجموعة — الرمز ${data.code}`);
     }catch(e){ console.warn(e); toast('تعذّر إنشاء المجموعة.'); }
