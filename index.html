@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F4FAFD">
+<meta name="theme-color" content="#F6F3FC">
 <meta name="color-scheme" content="light only">
 <title>رِفق | RIFQ</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%233E8FC4'/%3E%3Ccircle cx='24' cy='16.5' r='5' fill='white'/%3E%3Cpath d='M12 23.5c1.6 7 6.3 11 12 11s10.4-4 12-11' fill='none' stroke='white' stroke-width='4.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%235F48A8'/%3E%3Ccircle cx='24' cy='16.5' r='5' fill='white'/%3E%3Cpath d='M12 23.5c1.6 7 6.3 11 12 11s10.4-4 12-11' fill='none' stroke='white' stroke-width='4.2' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,12 +31,31 @@ window.RIFQ_FIREBASE_CONFIG = {
 <style>
 /* ================= RIFQ Design Tokens ================= */
 :root{
-  --primary:#64B5E8; --primary-600:#3E8FC4; --primary-700:#2A6F9F; --primary-50:#EEF7FD; --primary-100:#DDEFFB;
-  --bg:#F4FAFD; --card:#FFFFFF; --ink:#183B56; --ink-2:#46627A; --muted:#7690A6; --line:#E3EEF5; --field:#F8FBFE;
-  --danger:#E5484D; --danger-50:#FDEEEE; --success:#1F9D68; --success-50:#E5F6EE; --warning:#D9771A; --warning-50:#FDF3E6;
-  --shadow:0 1px 2px rgba(24,59,86,.04), 0 10px 28px rgba(24,59,86,.06);
-  --map-bg:#EAF5FC; --map-line:#CFE5F3; --map-text:#7690A6; --halo:#FFFFFF;
-  --hero-a:#183B56; --hero-b:#265F8A;
+  /* الهوية: البنفسجي لون الاستقبال والضيافة السعودي — قائد، والسماوي لون داعم */
+  --primary:#5F48A8; --primary-dark:#45357F;
+  --sky:#64B5E8; --sky-600:#3E8FC4; --sky-50:#EEF7FD;
+  --lavender-50:#F6F3FC; --lavender-100:#E9E3F7;
+  --sand:#D6B98F;
+  --gradient:linear-gradient(135deg,#5F48A8 0%,#3E8FC4 100%);
+  --white:#FFFFFF;
+  --bg:#F6F3FC; --card:#FFFFFF; --field:#FBFAFE; --line:#E9E3F7;
+  --ink:#231F3D; --ink-2:#4A4463; --slate:#5C6B82;
+  --danger:#E5484D; --danger-50:#FDEEEE; --danger-ink:#B3272C;
+  --success:#0F5D46; --success-50:#E4F1EB;
+  --warning:#D9771A; --warning-50:#FDF3E6; --warning-ink:#8A4A05;
+  --shadow:0 1px 2px rgba(35,31,61,.05), 0 8px 22px rgba(35,31,61,.07);
+  --sh-1:0 1px 2px rgba(35,31,61,.06);
+  --sh-3:0 4px 12px rgba(35,31,61,.08), 0 20px 44px rgba(35,31,61,.12);
+  --tint-a:#EDE7F8; --tint-b:#F6F3FC;
+  --map-bg:#F1EDFA; --map-line:#DCD3F0; --map-text:#5C6B82; --halo:#FFFFFF; --pin-offline:#9AA6B8;
+  --hero-a:#45357F; --hero-b:#5F48A8;
+  /* أسماء متوافقة مع الإصدار السابق — لا لون مكتوب مباشرة في المكوّنات */
+  --primary-600:var(--primary); --primary-700:var(--primary-dark);
+  --primary-50:var(--lavender-100); --primary-100:var(--lavender-100);
+  --muted:var(--slate);
+  /* درجات مساعدة للحالات — كي لا يُكتب أي لون داخل المكوّنات */
+  --state-ok-line:#C6DED3; --state-wait-line:#D6CCEF; --state-bad-line:#F6CFD0; --state-off-bg:#F2F0F7;
+  --danger-line:#F7DADB; --sos-a:#FF8185; --sos-b:#E5484D; --sos-c:#C5343A; --cam-bg:#0B1620;
 }
 :root{ color-scheme:light; box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
 *,*::before,*::after{ box-sizing:inherit; }
@@ -44,9 +63,19 @@ html{ height:100%; scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text
 body{ margin:0; min-height:100%; background:var(--bg); color:var(--ink);
   font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,'Geeza Pro',system-ui,sans-serif; font-size:16px; line-height:1.6;
   -webkit-tap-highlight-color:transparent; }
+body::before{ content:""; position:fixed; inset:0 0 auto 0; height:300px; z-index:-1; pointer-events:none;
+  background:linear-gradient(180deg,var(--tint-a) 0%,var(--tint-b) 100%); }
 button,input,select,textarea{ font:inherit; color:inherit; }
 a{ color:inherit; }
-.app{ max-width:560px; margin:0 auto; padding:14px 18px 128px; }
+.app{ max-width:560px; margin:0 auto; padding:14px 18px 150px; }
+.hint{ color:var(--muted); font-size:12.5px; line-height:1.6; margin:-4px 6px 0; }
+.appbar{ position:sticky; top:0; z-index:30; margin:-14px -18px 16px; padding:12px 18px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:rgba(246,243,252,.82); backdrop-filter:saturate(180%) blur(14px); -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid transparent; }
+.appbar.stuck{ border-bottom-color:var(--line); }
+.mebtn{ width:44px; height:44px; border-radius:50%; border:none; flex:none; cursor:pointer; font-weight:700; font-size:17px;
+  background:var(--primary-100); color:var(--primary-700); display:grid; place-items:center; background-size:cover; background-position:center; }
 .app.bare{ padding-bottom:40px; }
 .ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
 .muted{ color:var(--muted); } .ink2{ color:var(--ink-2); }
@@ -60,45 +89,50 @@ p{ margin:0; }
 .grow{ flex:1; min-width:0; } .between{ justify-content:space-between; } .wrap{ flex-wrap:wrap; }
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; } .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
 .center{ text-align:center; }
-.section-title{ display:flex; align-items:center; justify-content:space-between; margin:26px 2px 10px; }
-.section-title h2{ font-size:16px; color:var(--ink-2); font-weight:600; }
+.section-title{ display:flex; align-items:center; justify-content:space-between; margin:24px 2px 10px; gap:10px; }
+.section-title h2{ font-size:16px; color:var(--ink-2); font-weight:600; display:flex; align-items:center; gap:8px; }
+.section-title h2::before{ content:""; width:3px; height:15px; border-radius:3px; background:var(--primary); flex:none; }
 
 /* cards */
 .card{ background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px; box-shadow:var(--shadow); }
-.card.tap{ cursor:pointer; transition:transform .12s; } .card.tap:active{ transform:scale(.99); }
+.card.tap{ cursor:pointer; transition:transform .12s, box-shadow .15s; } .card.tap:active{ transform:scale(.985); box-shadow:var(--sh-1); }
+.chev{ color:var(--muted); flex:none; display:grid; place-items:center; }
+.chev svg{ width:20px; height:20px; }
 .card.flat{ box-shadow:none; }
 .card.alert{ border-color:rgba(229,72,77,.5); }
 .card.sel{ border-color:var(--primary); box-shadow:0 0 0 1.5px var(--primary); }
-.hero{ background:linear-gradient(225deg,var(--hero-a) 0%,var(--hero-b) 100%); color:#fff; border:none; }
+.hero{ background:linear-gradient(225deg,var(--hero-a) 0%,var(--hero-b) 100%); color:var(--white); border:none; }
 .hero .sub{ color:rgba(255,255,255,.72); }
 .list{ padding:4px 18px; } .list>.li{ padding:14px 0; } .list>.li+.li{ border-top:1px solid var(--line); }
 
 /* icon badges */
 .ib{ width:44px; height:44px; border-radius:14px; display:grid; place-items:center; flex:none; background:var(--primary-50); color:var(--primary-600); }
 .ib svg{ width:22px; height:22px; } .ib.sm{ width:36px; height:36px; border-radius:11px; } .ib.sm svg{ width:18px; height:18px; }
-.ib.danger{ background:var(--danger-50); color:var(--danger); } .ib.success{ background:var(--success-50); color:var(--success); }
-.ib.warning{ background:var(--warning-50); color:var(--warning); } .ib.muted{ background:var(--line); color:var(--muted); }
+.ib.danger{ background:var(--danger-50); color:var(--danger-ink); } .ib.success{ background:var(--success-50); color:var(--success); }
+.ib.warning{ background:var(--warning-50); color:var(--warning-ink); } .ib.muted{ background:var(--line); color:var(--muted); }
 
 /* status chip */
 .chip{ display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:13px; font-weight:600; white-space:nowrap; line-height:1.6; }
 .chip.dot::before{ content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
 .chip.success{ background:var(--success-50); color:var(--success); } .chip.danger{ background:var(--danger-50); color:var(--danger); }
-.chip.muted{ background:var(--line); color:var(--muted); } .chip.primary{ background:var(--primary-50); color:var(--primary-600); }
-.chip.warning{ background:var(--warning-50); color:var(--warning); }
+.chip.muted{ background:var(--line); color:var(--ink-2); } .chip.primary{ background:var(--lavender-100); color:var(--primary-dark); }
+.chip.info{ background:var(--sky-50); color:var(--ink); } .chip.info.dot::before{ background:var(--sky-600); }
+.chip.warning{ background:var(--warning-50); color:var(--warning-ink); }
+.chip.danger{ color:var(--danger-ink); }
 .tags{ display:flex; flex-wrap:wrap; gap:6px; }
 .tag{ padding:4px 11px; border-radius:10px; background:var(--primary-50); color:var(--ink); font-size:14px; font-weight:500; }
-.tag.red{ background:var(--danger-50); color:var(--danger); }
+.tag.red{ background:var(--danger-50); color:var(--danger-ink); }
 
 /* buttons */
-.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid transparent; border-radius:16px; padding:12px 20px; min-height:54px; font-weight:600; font-size:16px; cursor:pointer; text-decoration:none; background:var(--primary-600); color:#fff; transition:filter .15s, transform .1s; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid transparent; border-radius:16px; padding:12px 20px; min-height:54px; font-weight:600; font-size:16px; cursor:pointer; text-decoration:none; background:var(--primary); color:var(--white); transition:filter .15s, transform .1s; }
 .btn:active{ transform:scale(.985); } .btn svg{ width:20px; height:20px; }
 .btn.block{ width:100%; }
 .btn.ghost{ background:transparent; color:var(--ink); border-color:var(--line); }
 .btn.soft{ background:var(--primary-50); color:var(--primary-600); }
-.btn.danger{ background:var(--danger); } .btn.danger-soft{ background:var(--danger-50); color:var(--danger); }
+.btn.danger{ background:var(--sos-c); } .btn.danger-soft{ background:var(--danger-50); color:var(--danger-ink); }
 .btn.sm{ min-height:42px; padding:8px 14px; font-size:14.5px; border-radius:13px; }
 .btn:disabled{ opacity:.5; cursor:default; }
-.btn:focus-visible,.navbtn:focus-visible,.switch:focus-visible,.pill:focus-visible,.role:focus-visible,.in:focus-visible,.card.tap:focus-visible,.linkbtn:focus-visible{ outline:3px solid rgba(100,181,232,.55); outline-offset:2px; }
+.btn:focus-visible,.navbtn:focus-visible,.switch:focus-visible,.pill:focus-visible,.role:focus-visible,.in:focus-visible,.card.tap:focus-visible,.linkbtn:focus-visible{ outline:3px solid rgba(95,72,168,.45); outline-offset:2px; }
 .iconbtn{ width:44px; height:44px; border-radius:14px; border:1px solid var(--line); background:var(--card); display:grid; place-items:center; cursor:pointer; color:var(--ink); flex:none; text-decoration:none; }
 .iconbtn svg{ width:21px; height:21px; }
 .linkbtn{ background:none; border:none; color:var(--primary-600); font-weight:600; cursor:pointer; padding:8px 4px; font-size:15px; }
@@ -110,7 +144,7 @@ p{ margin:0; }
 .field{ display:block; } .field>span{ display:block; font-size:14px; color:var(--ink-2); margin:0 2px 7px; font-weight:500; }
 .field>small{ display:block; color:var(--muted); font-size:12.5px; margin:6px 2px 0; }
 .in{ width:100%; border:1.5px solid var(--line); background:var(--field); border-radius:15px; padding:13px 15px; min-height:54px; outline:none; font-size:16px; transition:border-color .15s, box-shadow .15s; }
-.in:focus{ border-color:var(--primary); box-shadow:0 0 0 4px rgba(100,181,232,.18); background:var(--card); }
+.in:focus{ border-color:var(--primary); box-shadow:0 0 0 4px rgba(95,72,168,.16); background:var(--card); }
 textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .in.code{ text-align:center; font-size:26px; font-weight:700; letter-spacing:8px; text-transform:uppercase; }
 
@@ -120,7 +154,7 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .pill[aria-pressed="true"]{ background:var(--primary-100); border-color:var(--primary); color:var(--primary-700); font-weight:600; }
 .pill[aria-pressed="true"]::before{ content:"✓"; font-weight:700; }
 .pill.blood{ min-width:64px; justify-content:center; direction:ltr; font-weight:700; font-size:16px; }
-.pill.blood[aria-pressed="true"]{ background:var(--danger-50); border-color:var(--danger); color:var(--danger); }
+.pill.blood[aria-pressed="true"]{ background:var(--danger-50); border-color:var(--danger); color:var(--danger-ink); }
 .pill.blood[aria-pressed="true"]::before{ content:none; }
 
 /* role cards */
@@ -132,14 +166,23 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 
 /* switch */
 .switch{ width:56px; height:32px; border-radius:999px; border:none; background:var(--line); position:relative; cursor:pointer; flex:none; transition:background .2s; }
-.switch::after{ content:""; position:absolute; top:3px; right:3px; width:26px; height:26px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:right .2s; }
+.switch::after{ content:""; position:absolute; top:3px; right:3px; width:26px; height:26px; border-radius:50%; background:var(--white); box-shadow:0 1px 3px rgba(0,0,0,.2); transition:right .2s; }
 .switch[aria-checked="true"]{ background:var(--success); } .switch[aria-checked="true"]::after{ right:27px; }
 
 /* banners */
 .banner{ border-radius:16px; padding:12px 14px; font-size:14.5px; display:flex; gap:10px; align-items:flex-start; line-height:1.6; }
 .banner svg{ width:19px; height:19px; flex:none; margin-top:3px; }
-.banner.warn{ background:var(--warning-50); color:var(--warning); } .banner.info{ background:var(--primary-50); color:var(--primary-600); }
-.banner.err{ background:var(--danger-50); color:var(--danger); }
+.banner.warn{ background:var(--warning-50); color:var(--warning-ink); } .banner.info{ background:var(--lavender-100); color:var(--primary-dark); }
+.banner.err{ background:var(--danger-50); color:var(--danger-ink); }
+
+/* auth hero */
+.authtop{ text-align:center; padding:30px 0 4px; }
+.authtop .halo{ width:96px; height:96px; margin:0 auto 14px; border-radius:30px; display:grid; place-items:center;
+  background:var(--gradient); box-shadow:0 12px 30px rgba(69,53,127,.28); }
+.authtop .halo svg{ width:62px; height:62px; }
+.authtop b{ display:block; font-size:34px; font-weight:700; line-height:1.15; }
+.authtop i{ display:block; font-style:normal; font-size:12px; letter-spacing:5px; font-weight:600; color:var(--primary); margin-top:3px; }
+.authtop p{ color:var(--muted); margin-top:10px; }
 
 /* brand */
 .brand{ display:flex; align-items:center; gap:10px; }
@@ -172,6 +215,28 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .ring{ width:58px; height:58px; border-radius:50%; display:grid; place-items:center; flex:none; background:conic-gradient(var(--primary-600) calc(var(--p)*1%), var(--line) 0); }
 .ring span{ width:46px; height:46px; border-radius:50%; background:var(--card); display:grid; place-items:center; font-weight:700; font-size:14px; }
 
+/* state card */
+.state{ border-radius:22px; padding:16px 18px; border:1px solid; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow); }
+.state .ic{ width:54px; height:54px; border-radius:17px; display:grid; place-items:center; flex:none; background:var(--white); position:relative; }
+.state .ic svg{ width:26px; height:26px; }
+.state h2{ font-size:17px; }
+.state.ok{ background:linear-gradient(170deg,var(--success-50) 0%,var(--white) 78%); border-color:var(--state-ok-line); }
+.state.ok .ic{ color:var(--success); box-shadow:0 2px 8px rgba(15,93,70,.16); }
+.state.ok .ic::after{ content:""; position:absolute; inset:0; border-radius:inherit; border:2px solid var(--success); animation:ring 2.2s ease-out infinite; }
+.state.wait{ background:linear-gradient(170deg,var(--lavender-100) 0%,var(--white) 78%); border-color:var(--state-wait-line); }
+.state.wait .ic{ color:var(--primary); box-shadow:0 2px 8px rgba(95,72,168,.16); }
+.state.bad{ background:linear-gradient(170deg,var(--danger-50) 0%,var(--white) 78%); border-color:var(--state-bad-line); }
+.state.bad .ic{ color:var(--danger); box-shadow:0 2px 8px rgba(229,72,77,.16); }
+.state.off{ background:linear-gradient(170deg,var(--state-off-bg) 0%,var(--white) 78%); border-color:var(--line); }
+.state.off .ic{ color:var(--muted); box-shadow:var(--sh-1); }
+
+/* segmented stat row */
+.statrow{ display:grid; grid-template-columns:repeat(3,1fr); background:var(--card); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow); overflow:hidden; }
+.statrow > div{ padding:15px 6px; text-align:center; }
+.statrow > div + div{ border-inline-start:1px solid var(--line); }
+.statrow .v{ font-size:27px; font-weight:700; line-height:1.15; }
+.statrow .k{ color:var(--muted); font-size:13px; margin-top:1px; }
+
 /* status hero */
 .status{ display:flex; align-items:center; gap:14px; }
 .status .big{ width:56px; height:56px; border-radius:18px; display:grid; place-items:center; flex:none; }
@@ -179,9 +244,14 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .pulse{ position:relative; } .pulse::after{ content:""; position:absolute; inset:0; border-radius:inherit; border:2px solid var(--success); animation:ring 2s ease-out infinite; }
 
 /* SOS */
-.sos-wrap{ display:grid; place-items:center; margin:26px 0 6px; }
-.sos{ position:relative; width:172px; height:172px; border-radius:50%; border:none; cursor:pointer; color:#fff;
-  background:radial-gradient(circle at 50% 30%,#FF8185 0%,#E5484D 60%,#C5343A 100%);
+.sos-panel{ margin-top:24px; border-radius:26px; padding:8px 18px 20px; text-align:center;
+  background:linear-gradient(180deg,var(--danger-50) 0%,rgba(255,255,255,0) 82%); border:1px solid var(--danger-line); }
+.sos-panel .lbl{ display:inline-flex; align-items:center; gap:6px; margin-top:14px; padding:4px 12px; border-radius:999px;
+  background:var(--white); color:var(--danger-ink); font-size:13px; font-weight:700; box-shadow:var(--sh-1); }
+.sos-panel .lbl svg{ width:15px; height:15px; }
+.sos-wrap{ display:grid; place-items:center; margin:14px 0 6px; }
+.sos{ position:relative; width:172px; height:172px; border-radius:50%; border:none; cursor:pointer; color:var(--white);
+  background:radial-gradient(circle at 50% 30%,var(--sos-a) 0%,var(--sos-b) 60%,var(--sos-c) 100%);
   box-shadow:0 16px 36px rgba(229,72,77,.38), inset 0 -6px 14px rgba(0,0,0,.12); }
 .sos b{ display:block; font-size:42px; font-weight:700; letter-spacing:2px; line-height:1; font-family:system-ui,sans-serif; }
 .sos span{ display:block; font-size:17px; font-weight:600; margin-top:6px; }
@@ -191,17 +261,17 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 @media (prefers-reduced-motion: reduce){ .sos::before,.sos::after,.pulse::after{ animation:none; opacity:0; } }
 
 /* digital card */
-.idcard{ border-radius:24px; padding:20px; color:#fff; background:linear-gradient(225deg,#183B56 0%,#2A6A98 100%); position:relative; overflow:hidden; box-shadow:0 14px 34px rgba(24,59,86,.25); }
-.idcard::after{ content:""; position:absolute; width:240px; height:240px; border-radius:50%; left:-80px; bottom:-130px; border:40px solid rgba(100,181,232,.14); }
+.idcard{ border-radius:24px; padding:20px; color:var(--white); background:linear-gradient(225deg,var(--hero-a) 0%,var(--hero-b) 100%); position:relative; overflow:hidden; box-shadow:0 14px 34px rgba(35,31,61,.25); }
+.idcard::after{ content:""; position:absolute; width:240px; height:240px; border-radius:50%; left:-80px; bottom:-130px; border:40px solid rgba(79,179,232,.22); }
 .idcard .lbl{ color:rgba(255,255,255,.62); font-size:12.5px; } .idcard .val{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.idcard .blood{ background:#fff; color:#C5343A; border-radius:14px; padding:6px 12px; font-weight:700; font-size:20px; direction:ltr; text-align:center; min-width:60px; }
+.idcard .blood{ background:var(--white); color:var(--danger-ink); border-radius:14px; padding:6px 12px; font-weight:700; font-size:20px; direction:ltr; text-align:center; min-width:60px; }
 .idcard .in-row{ position:relative; z-index:1; }
 
 /* medical card */
 .med{ border-radius:20px; padding:16px; background:var(--danger-50); }
 .med .bt{ width:64px; height:64px; border-radius:18px; background:var(--card); color:var(--danger); display:grid; place-items:center; font-weight:700; font-size:22px; direction:ltr; flex:none; }
-.med .k{ color:var(--danger); font-size:13px; font-weight:600; margin-bottom:4px; }
-.med .tag{ background:#fff; color:var(--danger); border:1px solid rgba(229,72,77,.25); } .med .tags{ gap:6px; } .med .muted{ color:#B9868A; }
+.med .k{ color:var(--danger-ink); font-size:13px; font-weight:600; margin-bottom:4px; }
+.med .tag{ background:var(--white); color:var(--danger-ink); border:1px solid rgba(229,72,77,.25); } .med .tags{ gap:6px; } .med .muted{ color:var(--slate); }
 
 /* code */
 .code{ font-size:34px; font-weight:700; letter-spacing:8px; text-align:center; padding:14px; border-radius:18px; background:var(--primary-50); color:var(--primary-700); direction:ltr; font-family:ui-monospace,Menlo,monospace; }
@@ -212,25 +282,25 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .lmap{ aspect-ratio:1/1; } .lmap .leaflet-container{ width:100%; height:100%; font-family:inherit; background:var(--map-bg); }
 .m-bg{ fill:var(--map-bg); } .m-line{ stroke:var(--map-line); fill:none; } .m-txt{ fill:var(--map-text); font-family:inherit; }
 .m-lbl{ fill:var(--ink); font-weight:700; paint-order:stroke; stroke:var(--halo); stroke-linejoin:round; } .m-pt{ cursor:pointer; }
-.leaflet-tooltip.rq-tip{ font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; font-weight:600; font-size:13px; background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:2px 9px; box-shadow:0 4px 12px rgba(24,59,86,.12); }
+.leaflet-tooltip.rq-tip{ font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; font-weight:600; font-size:13px; background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:2px 9px; box-shadow:0 4px 12px rgba(35,31,61,.12); }
 .leaflet-tooltip.rq-tip::before{ display:none; }
-.rq-ring{ display:block; width:44px; height:44px; border-radius:50%; border:3px solid #E5484D; animation:ring 1.6s ease-out infinite; }
-.mapfit{ position:absolute; z-index:500; bottom:12px; left:12px; box-shadow:0 4px 14px rgba(24,59,86,.15); }
+.rq-ring{ display:block; width:44px; height:44px; border-radius:50%; border:3px solid var(--danger); animation:ring 1.6s ease-out infinite; }
+.mapfit{ position:absolute; z-index:500; bottom:12px; left:12px; box-shadow:0 4px 14px rgba(35,31,61,.15); }
 .mapfit svg{ width:18px; height:18px; }
-.leaflet-tooltip.rq-tip.zone{ background:#1F9D68; color:#fff; border:none; }
+.leaflet-tooltip.rq-tip.zone{ background:var(--success); color:var(--white); border:none; }
 .rq-pin{ background:none; border:none; }
 .pin{ display:flex; flex-direction:column; align-items:center; gap:4px; }
-.pin-av{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:#fff; font-weight:700; font-size:16px; border:3px solid #fff; box-shadow:0 4px 12px rgba(24,59,86,.3); position:relative; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
-.pin-av::after{ content:""; position:absolute; bottom:-3px; left:-3px; width:14px; height:14px; border-radius:50%; border:2.5px solid #fff; }
-.pin-lbl{ background:#fff; border-radius:10px; padding:3px 9px; font:600 13px/1.3 'IBM Plex Sans Arabic',system-ui,sans-serif; color:#183B56; box-shadow:0 3px 10px rgba(24,59,86,.18); white-space:nowrap; text-align:center; }
+.pin-av{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:var(--white); font-weight:700; font-size:16px; border:3px solid var(--white); box-shadow:0 4px 12px rgba(35,31,61,.3); position:relative; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
+.pin-av::after{ content:""; position:absolute; bottom:-3px; left:-3px; width:14px; height:14px; border-radius:50%; border:2.5px solid var(--white); }
+.pin-lbl{ background:var(--white); border-radius:10px; padding:3px 9px; font:600 13px/1.3 'IBM Plex Sans Arabic',system-ui,sans-serif; color:var(--ink); box-shadow:0 3px 10px rgba(35,31,61,.18); white-space:nowrap; text-align:center; }
 .pin-lbl small{ display:block; font-size:11px; font-weight:600; }
-.pin-online .pin-av{ background:#3E8FC4; } .pin-online .pin-av::after{ background:#1F9D68; } .pin-online small{ color:#1F9D68; }
-.pin-online .pin-av::before{ content:""; position:absolute; inset:-7px; border-radius:50%; border:2.5px solid #1F9D68; animation:ring 1.8s ease-out infinite; }
-.pin-offline .pin-av{ background:#9AAFC0; } .pin-offline .pin-av::after{ background:#9AAFC0; } .pin-offline small{ color:#7690A6; } .pin-offline{ opacity:.9; }
-.pin-outside .pin-av{ background:#D9771A; } .pin-outside .pin-av::after{ background:#D9771A; } .pin-outside small{ color:#D9771A; }
-.pin-outside .pin-av::before{ content:""; position:absolute; inset:-7px; border-radius:50%; border:2.5px solid #D9771A; animation:ring 1.6s ease-out infinite; }
-.pin-sos .pin-av{ background:#E5484D; } .pin-sos .pin-av::after{ background:#E5484D; } .pin-sos small{ color:#E5484D; }
-.pin-sos .pin-av::before{ content:""; position:absolute; inset:-8px; border-radius:50%; border:3px solid #E5484D; animation:ring 1.2s ease-out infinite; }
+.pin-online .pin-av{ background:var(--sky-600); } .pin-online .pin-av::after{ background:var(--success); } .pin-online small{ color:var(--success); }
+.pin-online .pin-av::before{ content:""; position:absolute; inset:-7px; border-radius:50%; border:2.5px solid var(--success); animation:ring 1.8s ease-out infinite; }
+.pin-offline .pin-av{ background:var(--pin-offline); } .pin-offline .pin-av::after{ background:var(--pin-offline); } .pin-offline small{ color:var(--slate); } .pin-offline{ opacity:.9; }
+.pin-outside .pin-av{ background:var(--warning); } .pin-outside .pin-av::after{ background:var(--warning); } .pin-outside small{ color:var(--warning-ink); }
+.pin-outside .pin-av::before{ content:""; position:absolute; inset:-7px; border-radius:50%; border:2.5px solid var(--warning); animation:ring 1.6s ease-out infinite; }
+.pin-sos .pin-av{ background:var(--danger); } .pin-sos .pin-av::after{ background:var(--danger); } .pin-sos small{ color:var(--danger-ink); }
+.pin-sos .pin-av::before{ content:""; position:absolute; inset:-8px; border-radius:50%; border:3px solid var(--danger); animation:ring 1.2s ease-out infinite; }
 .avatar.photo{ background-size:cover; background-position:center; color:transparent; }
 .pin-av{ background-size:cover; background-position:center; }
 .idphoto{ width:64px; height:64px; border-radius:20px; background-size:cover; background-position:center; margin-inline-end:14px; border:2px solid rgba(255,255,255,.5); flex:none; }
@@ -242,27 +312,28 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .step:last-child::before{ display:none; }
 .step-mark{ width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-weight:700; flex:none; background:var(--card); border:2px solid var(--line); color:var(--muted); z-index:1; }
 .step-mark svg{ width:20px; height:20px; }
-.step.done .step-mark{ background:var(--success); border-color:var(--success); color:#fff; }
-.step.now .step-mark{ background:var(--primary-600); border-color:var(--primary-600); color:#fff; box-shadow:0 0 0 5px var(--primary-100); }
+.step.done .step-mark{ background:var(--success); border-color:var(--success); color:var(--white); }
+.step.now .step-mark{ background:var(--primary); border-color:var(--primary); color:var(--white); box-shadow:0 0 0 5px var(--lavender-100); }
 .step.now .card{ border-color:var(--primary); }
 .step.locked .card{ opacity:.72; }
 .legend-c{ border-radius:14px; padding:8px 4px; text-align:center; line-height:1.3; }
 .legend-c b{ display:block; font-size:20px; } .legend-c span{ font-size:12px; font-weight:600; }
-.legend-c.lg-on{ background:var(--success-50); color:var(--success); } .legend-c.lg-off{ background:var(--line); color:var(--muted); }
-.legend-c.lg-out{ background:var(--warning-50); color:var(--warning); } .legend-c.lg-sos{ background:var(--danger-50); color:var(--danger); }
+.legend-c.lg-on{ background:var(--success-50); color:var(--success); } .legend-c.lg-off{ background:var(--line); color:var(--ink-2); }
+.legend-c.lg-out{ background:var(--warning-50); color:var(--warning-ink); } .legend-c.lg-sos{ background:var(--danger-50); color:var(--danger-ink); }
 .range{ width:100%; accent-color:var(--primary-600); height:32px; }
-.nav{ box-shadow:0 -6px 24px rgba(24,59,86,.06); }
+.nav{ box-shadow:0 -6px 24px rgba(35,31,61,.07); }
 
 /* nav */
 .nav{ position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); z-index:1000; }
 .nav .in-nav{ max-width:560px; margin:0 auto; display:grid; grid-template-columns:repeat(var(--n),1fr); }
 .navbtn{ background:none; border:none; padding:9px 4px 11px; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; position:relative; }
 .navbtn .p{ width:60px; height:32px; border-radius:999px; display:grid; place-items:center; } .navbtn svg{ width:23px; height:23px; }
-.navbtn[aria-current="page"]{ color:var(--ink); } .navbtn[aria-current="page"] .p{ background:var(--primary-100); color:var(--primary-700); }
-.badge{ position:absolute; top:5px; left:calc(50% - 28px); min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:var(--danger); color:#fff; font-size:11.5px; display:grid; place-items:center; }
+.navbtn .p{ transition:background .18s; }
+.navbtn[aria-current="page"]{ color:var(--primary-700); } .navbtn[aria-current="page"] .p{ background:var(--primary-100); color:var(--primary-700); }
+.badge{ position:absolute; top:5px; left:calc(50% - 28px); min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:var(--danger); color:var(--white); font-size:11.5px; display:grid; place-items:center; }
 
 /* sheets */
-.overlay{ position:fixed; inset:0; background:rgba(13,28,41,.5); z-index:2000; display:flex; align-items:flex-end; justify-content:center; }
+.overlay{ position:fixed; inset:0; background:rgba(24,18,46,.5); z-index:2000; display:flex; align-items:flex-end; justify-content:center; }
 .overlay[hidden]{ display:none; } .overlay.mid{ align-items:center; }
 .sheet{ background:var(--bg); width:100%; max-width:560px; max-height:92vh; overflow:auto; border-radius:28px 28px 0 0; padding:12px 20px calc(24px + env(safe-area-inset-bottom,0px)); animation:up .22s ease-out; }
 .sheet.center{ border-radius:28px; margin:auto 16px; text-align:center; max-width:420px; padding:22px 20px; }
@@ -270,16 +341,16 @@ textarea.in{ min-height:84px; resize:vertical; line-height:1.6; }
 .handle{ width:44px; height:5px; border-radius:9px; background:var(--line); margin:0 auto 14px; }
 .bigicon{ width:76px; height:76px; border-radius:50%; display:grid; place-items:center; margin:4px auto 12px; }
 .bigicon svg{ width:38px; height:38px; }
-.bigicon.danger{ background:var(--danger-50); color:var(--danger); } .bigicon.success{ background:var(--success-50); color:var(--success); } .bigicon.warning{ background:var(--warning-50); color:var(--warning); }
-.toast{ position:fixed; z-index:3000; left:50%; bottom:calc(96px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:#183B56; color:#fff; padding:12px 18px; border-radius:15px; font-size:15px; z-index:60; max-width:calc(100% - 32px); box-shadow:0 8px 24px rgba(0,0,0,.2); text-align:center; }
+.bigicon.danger{ background:var(--danger-50); color:var(--danger); } .bigicon.success{ background:var(--success-50); color:var(--success); } .bigicon.warning{ background:var(--warning-50); color:var(--warning-ink); }
+.toast{ position:fixed; z-index:3000; left:50%; bottom:calc(96px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--ink); color:var(--white); padding:12px 18px; border-radius:15px; font-size:15px; z-index:60; max-width:calc(100% - 32px); box-shadow:0 8px 24px rgba(0,0,0,.2); text-align:center; }
 .toast[hidden]{ display:none; }
-.spin{ width:22px; height:22px; border-radius:50%; border:3px solid rgba(255,255,255,.4); border-top-color:#fff; animation:sp .8s linear infinite; }
+.spin{ width:22px; height:22px; border-radius:50%; border:3px solid rgba(255,255,255,.4); border-top-color:var(--white); animation:sp .8s linear infinite; }
 .spin.dark{ border-color:var(--line); border-top-color:var(--primary-600); }
 @keyframes sp{ to{ transform:rotate(360deg); } }
 .center-screen{ min-height:70vh; display:grid; place-items:center; text-align:center; }
-.qrbox{ background:#fff; border-radius:22px; padding:14px; max-width:300px; margin:18px auto 14px; box-shadow:var(--shadow); }
+.qrbox{ background:var(--white); border:1px solid var(--sand); border-radius:22px; padding:14px; max-width:300px; margin:18px auto 14px; box-shadow:var(--shadow); }
 .qrbox svg{ width:100%; height:auto; display:block; }
-.qrcam{ border-radius:20px; overflow:hidden; background:#0B1620; min-height:260px; margin:14px 0 10px; }
+.qrcam{ border-radius:20px; overflow:hidden; background:var(--cam-bg); min-height:260px; margin:14px 0 10px; }
 .qrcam video{ width:100% !important; display:block; }
 .livedot{ width:10px; height:10px; border-radius:50%; background:var(--success); flex:none; position:relative; }
 .livedot::after{ content:""; position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--success); animation:ring 1.6s ease-out infinite; }
@@ -357,9 +428,17 @@ const P = {
   camera:'M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
   key:'M14 10a4 4 0 1 0-3.5 4L9 15.5V18H6.5v2.5H4V18l6.5-6.5 M16 8.5h.1'
 };
+/* ---- قراءة الألوان من الثيم: لا لون مكتوب مباشرة في الشاشات ---- */
+const THEME_FB = { 'primary':'#5F48A8', 'primary-dark':'#45357F', 'sky':'#64B5E8', 'sky-600':'#3E8FC4',
+  'success':'#0F5D46', 'warning':'#D9771A', 'danger':'#E5484D', 'slate':'#5C6B82', 'ink':'#231F3D',
+  'white':'#FFFFFF', 'pin-offline':'#9AA6B8' };
+let __cs = null;
+const TH = (n) => { try { __cs = __cs || getComputedStyle(document.documentElement); const v = __cs.getPropertyValue('--' + n).trim(); if (v) return v; } catch (e) {} return THEME_FB[n] || '#000'; };
+
 const I = (n, st) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${st ? ` style="${st}"` : ''}><path d="${P[n]}"/></svg>`;
-const MARK = `<svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="rqg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7CC6F0"/><stop offset="1" stop-color="#3E8FC4"/></linearGradient></defs><rect width="48" height="48" rx="14" fill="url(#rqg)"/><circle cx="24" cy="16.5" r="5" fill="#fff"/><path d="M12 23.5c1.6 7 6.3 11 12 11s10.4-4 12-11" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/></svg>`;
-const brand = (cls, light) => `<div class="brand ${cls || ''}">${MARK}<div><b${light ? ' style="color:#fff"' : ''}>رِفق</b><i${light ? ' style="color:rgba(255,255,255,.7)"' : ''}>RIFQ</i></div></div>`;
+const MARK = `<svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="rqg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--primary)"/><stop offset="1" stop-color="var(--sky-600)"/></linearGradient></defs><rect width="48" height="48" rx="14" fill="url(#rqg)"/><circle cx="24" cy="16.5" r="5" fill="var(--white)"/><path d="M12 23.5c1.6 7 6.3 11 12 11s10.4-4 12-11" fill="none" stroke="var(--white)" stroke-width="4.2" stroke-linecap="round"/></svg>`;
+const MARK_W = `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="16.5" r="5" fill="var(--white)"/><path d="M12 23.5c1.6 7 6.3 11 12 11s10.4-4 12-11" fill="none" stroke="var(--white)" stroke-width="4.2" stroke-linecap="round"/></svg>`;
+const brand = (cls, light) => `<div class="brand ${cls || ''}">${MARK}<div><b${light ? ' style="color:var(--white)"' : ''}>رِفق</b><i${light ? ' style="color:rgba(255,255,255,.7)"' : ''}>RIFQ</i></div></div>`;
 
 /* ---------------- formatting ---------------- */
 const NF = 'ar-u-nu-latn';
@@ -482,6 +561,10 @@ function onField(e){
 document.addEventListener('input', onField);
 document.addEventListener('change', onField);
 setInterval(scheduleRender, 30000);
+window.addEventListener('scroll', () => {
+  const b = document.querySelector('.appbar');
+  if (b) b.classList.toggle('stuck', window.scrollY > 6);
+}, { passive: true });
 
 /* ---------------- toast & modal ---------------- */
 let toastTimer = null;
@@ -710,7 +793,7 @@ function mapSVG(pts, opts){
   const Q = pts.map(p => Object.assign({}, p, { x:(p.lng - c.lng) * kx, y:-(p.lat - c.lat) * ky }));
   const R = Math.max(90, ...Q.map(p => Math.max(Math.abs(p.x), Math.abs(p.y)))) * 1.3, fs = R / 13, pr = R / 26;
   let g = `<rect class="m-bg" x="${-R}" y="${-R}" width="${2*R}" height="${2*R}"/>`;
-  for (const p of Q) g += `<g${p.act ? ` class="m-pt" data-act="${p.act}" data-id="${esc(p.id)}"` : ''}><circle cx="${p.x}" cy="${p.y}" r="${pr}" fill="${p.color}" stroke="#fff" vector-effect="non-scaling-stroke" stroke-width="2.5"/>${p.label ? `<text class="m-lbl" x="${p.x}" y="${p.y + pr * 2.9}" font-size="${fs * .78}" text-anchor="middle" stroke-width="${fs * .22}">${esc(p.label)}</text>` : ''}</g>`;
+  for (const p of Q) g += `<g${p.act ? ` class="m-pt" data-act="${p.act}" data-id="${esc(p.id)}"` : ''}><circle cx="${p.x}" cy="${p.y}" r="${pr}" fill="${p.color}" stroke="var(--white)" vector-effect="non-scaling-stroke" stroke-width="2.5"/>${p.label ? `<text class="m-lbl" x="${p.x}" y="${p.y + pr * 2.9}" font-size="${fs * .78}" text-anchor="middle" stroke-width="${fs * .22}">${esc(p.label)}</text>` : ''}</g>`;
   return `<div class="mapbox"><svg viewBox="${-R} ${-R} ${2*R} ${2*R}" role="img" aria-label="خريطة المواقع">${g}</svg></div>`;
 }
 const LM = { el:null, map:null, layer:null, key:null, pts:[], req:null };
@@ -756,23 +839,23 @@ function mountMap(){
   const edit = opts.edit;
   LM.zones = (opts.zones || []).filter(z => !edit || z.id !== edit.id);
   for (const z of LM.zones){
-    L.circle([z.lat, z.lng], { radius:z.r, color:'#1F9D68', weight:2, dashArray:'6 6', fillColor:'#1F9D68', fillOpacity:.08, interactive:false }).addTo(LM.layer)
+    L.circle([z.lat, z.lng], { radius:z.r, color:TH('success'), weight:2, dashArray:'6 6', fillColor:TH('success'), fillOpacity:.08, interactive:false }).addTo(LM.layer)
       .bindTooltip(esc(z.name), { permanent:true, direction:'center', className:'rq-tip zone' });
   }
   if (edit){
-    LM.editCircle = L.circle([edit.lat, edit.lng], { radius:edit.r, color:'#3E8FC4', weight:3, fillColor:'#64B5E8', fillOpacity:.18, interactive:false }).addTo(LM.layer);
-    LM.editDot = L.circleMarker([edit.lat, edit.lng], { radius:7, color:'#fff', weight:3, fillColor:'#3E8FC4', fillOpacity:1, interactive:false }).addTo(LM.layer);
+    LM.editCircle = L.circle([edit.lat, edit.lng], { radius:edit.r, color:TH('primary'), weight:3, fillColor:TH('primary'), fillOpacity:.14, interactive:false }).addTo(LM.layer);
+    LM.editDot = L.circleMarker([edit.lat, edit.lng], { radius:7, color:TH('white'), weight:3, fillColor:TH('primary'), fillOpacity:1, interactive:false }).addTo(LM.layer);
   }
   for (const p of pts) if (p.trail && p.trail.length > 1) L.polyline(p.trail, { color:p.color, weight:4, opacity:.55, dashArray:'1 9', lineCap:'round' }).addTo(LM.layer);
   for (const p of pts.slice().sort((a, b) => (a.z || 0) - (b.z || 0))){
-    if (p.acc) L.circle([p.lat, p.lng], { radius:p.acc, color:'#64B5E8', weight:1, fillColor:'#64B5E8', fillOpacity:.15 }).addTo(LM.layer);
+    if (p.acc) L.circle([p.lat, p.lng], { radius:p.acc, color:TH('primary'), weight:1, fillColor:TH('primary'), fillOpacity:.12 }).addTo(LM.layer);
     if (p.pulse && !p.state) L.marker([p.lat, p.lng], { icon:L.divIcon({ className:'', html:'<span class="rq-ring"></span>', iconSize:[44, 44], iconAnchor:[22, 22] }), interactive:false }).addTo(LM.layer);
     let mk;
     if (p.state){
       mk = L.marker([p.lat, p.lng], { zIndexOffset:(p.z || 0) * 100, icon:L.divIcon({ className:'rq-pin', iconSize:[140, 84], iconAnchor:[70, 22],
         html:`<div class="pin pin-${p.state}"><span class="pin-av"${p.photo ? ` style="background-image:url('${p.photo}');color:transparent"` : ''}>${esc(p.initial || '')}</span><span class="pin-lbl">${esc(p.label)}<small>${esc(p.statusText || '')}</small></span></div>` }) }).addTo(LM.layer);
     } else {
-      mk = L.circleMarker([p.lat, p.lng], { radius:10, color:'#fff', weight:3, fillColor:p.color, fillOpacity:1 }).addTo(LM.layer);
+      mk = L.circleMarker([p.lat, p.lng], { radius:10, color:TH('white'), weight:3, fillColor:p.color, fillOpacity:1 }).addTo(LM.layer);
       if (p.label) mk.bindTooltip(esc(p.label), { permanent:true, direction:'top', offset:[0, -11], className:'rq-tip' });
     }
     if (p.act) mk.on('click', () => A[p.act]({ id:p.id }));
@@ -789,6 +872,10 @@ function mountMap(){
 }
 
 /* ---------------- shared UI ---------------- */
+const chev = `<span class="chev">${I('chev')}</span>`;
+const authTop = sub => `<div class="authtop"><div class="halo">${MARK_W}</div><b>رِفق</b><i>RIFQ</i>${sub ? `<p>${sub}</p>` : ''}</div>`;
+const meBtn = m => `<button class="mebtn" data-act="tab" data-v="me" aria-label="ملفي"${m.photo ? ` style="background-image:url('${m.photo}');color:transparent"` : ''}>${esc(initial(m.name))}</button>`;
+const appBar = right => `<div class="appbar">${brand()}<div class="row" style="gap:8px">${right}</div></div>`;
 const spinner = dark => `<span class="spin${dark ? ' dark' : ''}"></span>`;
 const center = inner => `<div class="center-screen"><div style="max-width:380px;width:100%">${inner}</div></div>`;
 const avatar = (m, alert, size) => `<div class="avatar${alert ? ' alert' : ''}${m.photo ? ' photo' : ''}" style="${size ? `width:${size}px;height:${size}px;font-size:${size * .4}px;` : ''}${m.photo ? `background-image:url('${m.photo}')` : ''}">${m.photo ? '' : esc(initial(m.name))}<span class="dot${isOnline(m) ? ' on' : ''}"></span></div>`;
@@ -920,7 +1007,7 @@ async function savePhoto(file){
 /* ---------------- journey helpers ---------------- */
 const stepsOf = g => (g && Array.isArray(g.steps)) ? g.steps : [];
 const noticesOf = g => (g && Array.isArray(g.notices)) ? g.notices : [];
-const travelers = () => S.members.filter(m => m.role !== 'supervisor');
+const travelers = () => S.members.filter(m => m.role !== 'supervisor' && m.role !== 'admin');
 const allowedIndex = (g, m) => Math.max((g && g.openIndex) || 0, (m && m.unlocked) || 0);
 function stepStatus(g, m, i){
   if ((m.progress || 0) > i) return 'done';
@@ -999,7 +1086,7 @@ document.addEventListener('change', e => {
 
 /* ---------------- views: setup & auth ---------------- */
 function vSetup(){
-  return center(`${brand('xl')}<div class="card stack" style="margin-top:24px;text-align:start"><h2>التطبيق غير مربوط بقاعدة البيانات</h2><p class="muted">${esc(initError || 'لم تُضف إعدادات Firebase بعد.')}</p></div>`);
+  return center(`${authTop()}<div class="card stack" style="margin-top:20px;text-align:start"><h2>التطبيق غير مربوط بقاعدة البيانات</h2><p class="muted">${esc(initError || 'لم تُضف إعدادات Firebase بعد.')}</p></div>`);
 }
 function vAuth(){
   const mode = S.authMode, role = val('role', 'traveler'), b = S.busy.auth;
@@ -1025,8 +1112,8 @@ function vAuth(){
       ${submit('login', 'دخول')}
       <div class="center"><button class="linkbtn" data-act="authMode" data-v="reset">نسيت كلمة المرور؟</button></div>`;
   }
-  return `<div style="padding-top:34px" class="stack lg">
-    <div style="display:grid;place-items:center">${brand('xl')}<p class="muted" style="margin-top:8px">رفيقك الآمن في كل رحلة</p></div>
+  return `<div class="stack lg">
+    ${authTop('رفيقك الآمن في كل رحلة')}
     <div class="card stack lg">${body}</div>
     <div class="center">${mode === 'login'
       ? `<span class="muted">ليس لديك حساب؟</span> <button class="linkbtn" data-act="authMode" data-v="register">أنشئ حسابًا</button>`
@@ -1034,9 +1121,9 @@ function vAuth(){
   </div>`;
 }
 function vNoProfile(){
-  if (S.busy.auth) return center(`${brand('xl')}<div style="margin-top:24px;display:grid;place-items:center;gap:12px">${spinner(true)}<span class="muted">جارٍ تجهيز حسابك…</span></div>`);
+  if (S.busy.auth) return center(`${authTop()}<div style="margin-top:18px;display:grid;place-items:center;gap:12px">${spinner(true)}<span class="muted">جارٍ تجهيز حسابك…</span></div>`);
   const role = val('role', 'traveler');
-  return `<div style="padding-top:34px" class="stack lg"><div style="display:grid;place-items:center">${brand('xl')}</div>
+  return `<div class="stack lg">${authTop()}
     <div class="card stack lg"><h2 style="font-size:21px">أكمل إنشاء حسابك</h2>
       <div class="stack sm">
         <button type="button" class="role" data-act="role" data-v="traveler" aria-pressed="${role === 'traveler'}"><div class="ib">${I('user')}</div><div class="grow"><b>مسافر / حاج</b></div><span class="tick"></span></button>
@@ -1091,27 +1178,27 @@ function groupFields(){
 function vTHome(){
   const me = S.me, g = S.group, f = S.fix, upd = f ? f.t : me.locAt;
   let status;
-  if (['denied', 'insecure', 'unsupported'].includes(S.geoErr)) status = { cls:'danger', icon:'wifiOff', title:'موقعك لا يصل للمشرف', sub:'يحتاج إذن الموقع' };
-  else if (S.tracking && !f) status = { cls:'', icon:'target', title:'جارٍ تحديد موقعك…', sub:'قد يستغرق بضع ثوانٍ' };
-  else if (S.tracking) status = { cls:'success', icon:'check', title:'موقعك يصل للمشرف', sub:`آخر تحديث: ${ago(upd)}` };
-  else status = { cls:'muted', icon:'wifiOff', title:'مشاركة الموقع متوقفة', sub:'شغّلها ليطمئن المشرف عليك' };
+  if (['denied', 'insecure', 'unsupported'].includes(S.geoErr)) status = { cls:'bad', icon:'wifiOff', title:'موقعك لا يصل للمشرف', sub:'يحتاج إذن الموقع' };
+  else if (S.tracking && !f) status = { cls:'wait', icon:'target', title:'جارٍ تحديد موقعك…', sub:'قد يستغرق بضع ثوانٍ' };
+  else if (S.tracking) status = { cls:'ok', icon:'check', title:'موقعك يصل للمشرف', sub:`آخر تحديث: ${ago(upd)}` };
+  else status = { cls:'off', icon:'wifiOff', title:'مشاركة الموقع متوقفة', sub:'شغّلها ليطمئن المشرف عليك' };
   const pct = completion(me), trip = g && g.tripTitle ? g : null;
-  return `<div class="row between" style="margin-bottom:18px">${brand()}<button class="iconbtn" data-act="tab" data-v="me" aria-label="ملفي" style="border-radius:50%;background:var(--primary-100);color:var(--primary-700);border:none;font-weight:700">${esc(initial(me.name))}</button></div>
+  const warn = [geoHelp(),
+    S.zoneOut ? `<div class="banner warn">${I('flag')}<div><b>أنت خارج منطقة «${esc(S.zoneOut.name)}»</b> بحوالي ${fmtDist(S.zoneOut.d)}. ارجع للمنطقة أو تواصل مع المشرف.</div></div>` : ''
+  ].filter(Boolean).join('');
+  const hint = S.tracking && f ? `<p class="hint">${S.wake ? 'الشاشة ستبقى مضاءة. ' : ''}أبقِ الصفحة مفتوحة ليستمر إرسال موقعك.</p>` : '';
+  return appBar(meBtn(me)) + `
     <h1>مرحبًا، ${esc(first(me.name))}</h1>
-    <p class="muted" style="margin:2px 0 18px">${g ? `أنت في مجموعة <b style="color:var(--ink)">${esc(g.name)}</b>` : 'نحن معك في كل خطوة من رحلتك'}</p>
+    <p class="muted" style="margin:2px 0 16px">${g ? `أنت في مجموعة <b style="color:var(--ink)">${esc(g.name)}</b>` : 'نحن معك في كل خطوة من رحلتك'}</p>
     <div class="stack">
-      <div class="card stack">
-        <div class="status"><div class="big ib ${status.cls}${status.cls === 'success' ? ' pulse' : ''}">${I(status.icon)}</div>
-          <div class="grow"><h2>${status.title}</h2><p class="muted sm">${esc(status.sub)}</p></div>
-          <button class="switch" role="switch" aria-checked="${S.tracking}" aria-label="مشاركة الموقع" data-act="toggleTrack"></button></div>
-        ${geoHelp()}
-        ${S.zoneOut ? `<div class="banner warn">${I('flag')}<div><b>أنت خارج منطقة «${esc(S.zoneOut.name)}»</b> بحوالي ${fmtDist(S.zoneOut.d)}. ارجع للمنطقة أو تواصل مع المشرف.</div></div>` : ''}
-        ${S.tracking && f ? `<p class="xs muted">${S.wake ? 'الشاشة ستبقى مضاءة. ' : ''}أبقِ الصفحة مفتوحة ليستمر إرسال موقعك.</p>` : ''}
-      </div>
+      <div class="state ${status.cls}"><div class="ic">${I(status.icon)}</div>
+        <div class="grow"><h2>${status.title}</h2><p class="muted sm">${esc(status.sub)}</p></div>
+        <button class="switch" role="switch" aria-checked="${S.tracking}" aria-label="مشاركة الموقع" data-act="toggleTrack"></button></div>
+      ${hint}${warn ? `<div class="card stack">${warn}</div>` : ''}
       ${!me.groupId ? `<div class="card stack"><div class="row"><div class="ib">${I('users')}</div><div class="grow"><h2>انضم لمجموعتك</h2><p class="muted sm">أدخل الرمز من المشرف</p></div></div>
         <div class="row"><input class="in code grow" style="font-size:20px;letter-spacing:5px" maxlength="8" data-draft="code" value="${esc(val('code'))}" placeholder="ABC234" aria-label="رمز المجموعة" autocapitalize="characters"><button class="btn" data-act="join" style="flex:none">${S.busy.join ? spinner() : 'انضمام'}</button></div>
         <button class="btn soft block" data-act="showQr">${I('qr')}أو اعرض باركودي للمشرف</button></div>` : ''}
-      ${trip ? `<div class="card row top"><div class="ib">${I('bus')}</div><div class="grow"><div class="row between"><p class="muted sm">الرحلة القادمة</p>${trip.tripTime ? `<span class="chip primary">${esc(tripStatus(trip.tripTime))}</span>` : ''}</div>
+      ${trip ? `<div class="card row top"><div class="ib">${I('bus')}</div><div class="grow"><div class="row between"><p class="muted sm">الرحلة القادمة</p>${trip.tripTime ? `<span class="chip info">${esc(tripStatus(trip.tripTime))}</span>` : ''}</div>
         <h2 style="margin-top:2px">${esc(trip.tripTitle)}</h2>${trip.tripTime ? `<p class="ink2 sm">${esc(fmtDT(trip.tripTime))}</p>` : ''}${trip.meetingPoint ? `<p class="ink2 sm">نقطة التجمع: ${esc(trip.meetingPoint)}</p>` : ''}</div></div>` : ''}
       ${(() => { const n = noticesOf(g)[0]; return n ? `<div class="card row top" style="border-color:var(--primary)"><div class="ib">${I('mega')}</div><div class="grow"><div class="muted xs">إعلان من المشرف · ${esc(ago(n.at))}</div><p style="font-weight:600;line-height:1.7;margin-top:2px">${esc(n.text)}</p></div></div>` : ''; })()}
       ${(() => {
@@ -1120,17 +1207,20 @@ function vTHome(){
         const s = i < 0 ? null : steps[i];
         return `<div class="card tap row" data-act="tab" data-v="trip" tabindex="0"><div class="ib">${I('route')}</div>
           <div class="grow"><div class="muted xs">${s ? `الخطوة ${i + 1} من ${steps.length}` : 'اكتملت كل الخطوات'}</div><h3>${s ? esc(s.title) : 'رحلة موفقة 🌿'}</h3>${s && s.at ? `<p class="muted xs">${esc(fmtDT(s.at))}</p>` : ''}</div>
-          <span class="muted">${I('chev', 'width:20px;height:20px')}</span></div>`;
+          ${chev}</div>`;
       })()}
-      ${pct < 100 ? `<div class="card tap row" data-act="tab" data-v="me" tabindex="0"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div class="grow"><h3>أكمل ملفك الصحي</h3><p class="muted sm">يساعد المسعفين على خدمتك بسرعة</p></div><span class="muted">${I('chev', 'width:20px;height:20px')}</span></div>` : ''}
+      ${pct < 100 ? `<div class="card tap row" data-act="tab" data-v="me" tabindex="0"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div class="grow"><h3>أكمل ملفك الصحي</h3><p class="muted sm">يساعد المسعفين على خدمتك بسرعة</p></div>${chev}</div>` : ''}
     </div>
-    <div class="sos-wrap"><button class="sos" data-act="sos" aria-label="إرسال بلاغ طوارئ"><b>SOS</b><span>طوارئ</span></button></div>
-    <p class="muted sm center">اضغط عند الحاجة لمساعدة عاجلة، وسيصل موقعك للمشرف فورًا</p>`;
+    <div class="sos-panel">
+      <div class="sos-wrap"><button class="sos" data-act="sos" aria-label="إرسال بلاغ طوارئ"><b>SOS</b><span>طوارئ</span></button></div>
+      <span class="lbl">${I('alert')}للحالات العاجلة فقط</span>
+      <p class="muted sm" style="margin-top:10px">يصل موقعك وبطاقتك الطبية إلى المشرف فورًا</p>
+    </div>`;
 }
 function vTLoc(){
   const me = S.me, f = S.fix;
   const lat = f ? f.lat : me.lat, lng = f ? f.lng : me.lng, upd = f ? f.t : me.locAt;
-  const pts = lat != null ? [{ id:'me', lat, lng, acc:f && f.acc, label:'أنا', color:'#3E8FC4' }] : [];
+  const pts = lat != null ? [{ id:'me', lat, lng, acc:f && f.acc, label:'أنا', color:TH('primary') }] : [];
   return `<h1>موقعي</h1><p class="muted" style="margin:2px 0 14px">هذا ما يراه مشرف مجموعتك</p>
     ${geoHelp() ? `<div style="margin-bottom:12px">${geoHelp()}</div>` : ''}
     ${S.zoneOut ? `<div class="banner warn" style="margin-bottom:12px">${I('flag')}<div>أنت خارج منطقة «${esc(S.zoneOut.name)}» بحوالي ${fmtDist(S.zoneOut.d)}</div></div>` : ''}
@@ -1153,7 +1243,7 @@ function vTMe(){
   const me = S.me, g = S.group, pct = completion(me);
   return `<h1 style="margin-bottom:14px">ملفي</h1>
     <div class="idcard">
-      <div class="row between in-row">${brand('', true).replace('<svg', '<svg style="width:34px;height:34px"')}<span class="chip" style="background:rgba(255,255,255,.14);color:#fff">بطاقة المسافر</span></div>
+      <div class="row between in-row">${brand('', true).replace('<svg', '<svg style="width:34px;height:34px"')}<span class="chip" style="background:rgba(255,255,255,.16);color:var(--white)">بطاقة المسافر</span></div>
       <div class="row in-row" style="margin-top:22px">${me.photo ? `<div class="idphoto" style="background-image:url('${me.photo}')"></div>` : ''}<div class="grow"><div style="font-size:22px;font-weight:700;line-height:1.3">${esc(me.name)}</div><div class="lbl" style="font-size:14px">${esc(g ? g.name : 'بدون مجموعة')}</div></div>
         <div style="text-align:center"><div class="lbl" style="margin-bottom:4px">فصيلة الدم</div><div class="blood">${esc(me.bloodType && me.bloodType !== 'لا أعرف' ? me.bloodType : '؟')}</div></div></div>
       <div class="grid3 in-row" style="margin-top:18px">
@@ -1164,7 +1254,7 @@ function vTMe(){
     </div>
     <div class="grid2" style="margin-top:12px">
       <label class="btn soft">${I('camera')}${me.photo ? 'تغيير الصورة' : 'إضافة صورتي'}<input type="file" accept="image/*" hidden data-file="photo"></label>
-      <button class="btn soft" data-act="showQr">${I('qr')}باركود الانضمام</button>
+      <button class="btn soft" data-act="showQr">${I('qr')}باركودي</button>
     </div>
     ${pct < 100 ? `<div class="card row" style="margin-top:12px"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div class="grow"><h3>ملفك مكتمل ${pct}%</h3><p class="muted sm">أكمل البيانات الناقصة بالضغط على «تعديل»</p></div></div>` : ''}
     <div class="stack" style="margin-top:12px">
@@ -1185,14 +1275,14 @@ const noGroup = () => center(`<div class="ib" style="width:84px;height:84px;bord
   <button class="btn block" data-act="newGroup">${I('plus')}إنشاء مجموعة</button>`);
 function sHeader(title){
   const g = selGroup();
-  return `<div class="row between" style="margin-bottom:14px">${brand()}<div class="row" style="gap:8px">${S.groups.length > 1 ? `<button class="btn ghost sm" data-act="tab" data-v="group">${I('users')}${esc(g ? g.name : '')}</button>` : ''}<button class="iconbtn" data-act="logout" aria-label="تسجيل الخروج">${I('out')}</button></div></div>
-    <h1 style="margin-bottom:14px">${title}</h1>`;
+  return appBar(`${S.groups.length > 1 ? `<button class="btn ghost sm" data-act="tab" data-v="group">${I('users')}${esc(g ? g.name : '')}</button>` : ''}<button class="iconbtn" data-act="logout" aria-label="تسجيل الخروج">${I('out')}</button>`)
+    + `<h1 style="margin-bottom:14px">${title}</h1>`;
 }
 function memberState(m, alert){
-  if (alert) return ['يحتاج مساعدة', 'danger', '#E5484D', 0];
-  if (isOutside(m, selGroup())) return ['خارج النطاق', 'warning', '#D9771A', 1];
-  if (isOnline(m)) return ['متصل', 'success', '#3E8FC4', 3];
-  return ['غير متصل', 'muted', '#8AA3B8', 2];
+  if (alert) return ['يحتاج مساعدة', 'danger', TH('danger'), 0];
+  if (isOutside(m, selGroup())) return ['خارج النطاق', 'warning', TH('warning'), 1];
+  if (isOnline(m)) return ['متصل', 'success', TH('sky-600'), 3];
+  return ['غير متصل', 'muted', TH('pin-offline'), 2];
 }
 function memberRow(m, alert){
   const st = memberState(m, alert);
@@ -1210,11 +1300,11 @@ function vSDash(){
   const notif = ('Notification' in window && Notification.permission === 'default')
     ? `<div class="card row"><div class="ib">${I('bell')}</div><div class="grow"><h3>إشعارات الطوارئ</h3><p class="muted xs">تنبيه حتى لو كنت في تبويب آخر</p></div><button class="btn sm" data-act="enableNotif">تفعيل</button></div>` : '';
   return sHeader(esc(g.name)) + `<div class="stack">
-    ${open.length ? `<div class="card tap row alert" style="background:var(--danger-50)" data-act="gotoAlerts" tabindex="0"><div class="ib danger" style="background:var(--card)">${I('alert')}</div><div class="grow" style="color:var(--danger)"><h2>${open.length === 1 ? (open[0].type === 'zone' ? `${esc(open[0].userName)} خارج النطاق` : `${esc(open[0].userName)} يحتاج مساعدة`) : `${open.length} تنبيهات مفتوحة`}</h2><p class="sm">اضغط لعرض الموقع والتفاصيل</p></div><span style="color:var(--danger)">${I('chev', 'width:20px;height:20px')}</span></div>` : ''}
-    <div class="grid3">
-      <div class="card stat"><div class="v">${ms.length}</div><div class="k">الأعضاء</div></div>
-      <div class="card stat"><div class="v" style="color:var(--success)">${online}</div><div class="k">متصلون</div></div>
-      <div class="card stat"><div class="v" style="color:${open.length ? 'var(--danger)' : 'var(--ink)'}">${open.length}</div><div class="k">بلاغات</div></div>
+    ${open.length ? `<div class="card tap row alert" style="background:var(--danger-50)" data-act="gotoAlerts" tabindex="0"><div class="ib danger" style="background:var(--card)">${I('alert')}</div><div class="grow" style="color:var(--danger)"><h2>${open.length === 1 ? (open[0].type === 'zone' ? `${esc(open[0].userName)} خارج النطاق` : `${esc(open[0].userName)} يحتاج مساعدة`) : `${open.length} تنبيهات مفتوحة`}</h2><p class="sm">اضغط لعرض الموقع والتفاصيل</p></div><span class="chev" style="color:var(--danger)">${I('chev')}</span></div>` : ''}
+    <div class="statrow">
+      <div><div class="v">${ms.length}</div><div class="k">الأعضاء</div></div>
+      <div><div class="v" style="color:var(--success)">${online}</div><div class="k">متصلون</div></div>
+      <div><div class="v" style="color:${open.length ? 'var(--danger)' : 'var(--muted)'}">${open.length}</div><div class="k">بلاغات</div></div>
     </div>
     ${notif}
   </div>
@@ -1240,7 +1330,7 @@ function vSMap(){
   const counts = [0, 0, 0, 0];
   const pts = located.map(m => { const st = memberState(m, alertIds.has(m.id)); counts[st[3]]++; return { id:m.id, lat:m.lat, lng:m.lng, label:first(m.name), initial:initial(m.name), photo:m.photo, state:STN[st[3]], statusText:stText(m, st[3]), act:ze ? null : 'member', z:4 - st[3], color:st[2], trail:S.trails[m.id] }; });
   S.members.filter(m => !hasLoc(m)).forEach(m => { counts[memberState(m, alertIds.has(m.id))[3]]++; });
-  if (!ze) open.filter(a => a.lat != null && a.type !== 'zone').forEach(a => pts.push({ id:a.userId, lat:a.lat, lng:a.lng, label:'SOS', initial:'!', state:'sos', statusText:`${first(a.userName)} · موقع البلاغ`, act:'member', color:'#E5484D', z:6 }));
+  if (!ze) open.filter(a => a.lat != null && a.type !== 'zone').forEach(a => pts.push({ id:a.userId, lat:a.lat, lng:a.lng, label:'SOS', initial:'!', state:'sos', statusText:`${first(a.userName)} · موقع البلاغ`, act:'member', color:TH('danger'), z:6 }));
   const liveN = S.members.filter(isOnline).length;
   const editor = ze ? `<div class="card stack" style="margin-bottom:12px;border-color:var(--primary)">
       <div class="row"><div class="ib">${I('flag')}</div><div class="grow"><h2>${ze.id ? 'تعديل المنطقة' : 'منطقة آمنة جديدة'}</h2><p class="muted sm">اضغط على الخريطة لتحديد مركز المنطقة</p></div></div>
@@ -1348,10 +1438,11 @@ function confirmBox(title, body, act, label, danger, extra){
 
 /* ---------------- journey views ---------------- */
 function logisticsCard(g, forSup){
-  const rows = [['tent', 'المخيم / السكن', g.camp], ['bus', 'الباص', g.bus ? `${g.bus}${g.plate ? ` · لوحة ${g.plate}` : ''}` : ''], ['flag', 'بوابة الوصول', g.gate], ['user', 'المشرف', g.supervisorName]];
+  const call = !forSup && g.supervisorPhone ? `<a class="iconbtn" style="background:var(--success-50);color:var(--success);border:none" href="tel:${esc(g.supervisorPhone)}" aria-label="اتصال بالمشرف">${I('phone')}</a>` : '';
+  const rows = [['tent', 'المخيم / السكن', g.camp, ''], ['bus', 'الباص', g.bus ? `${g.bus}${g.plate ? ` — لوحة ${g.plate}` : ''}` : '', ''], ['flag', 'بوابة الوصول', g.gate, ''], ['user', 'مشرف المجموعة', g.supervisorName, call]];
   return `<div class="card stack">
-    <div class="row"><div class="ib">${I('tent')}</div><div class="grow"><h2>بيانات الرحلة</h2><p class="muted sm">${esc(g.name)}</p></div>${forSup ? `<button class="btn soft sm" data-act="tripInfo">${I('edit')}تعديل</button>` : (g.supervisorPhone ? `<a class="iconbtn" style="background:var(--success-50);color:var(--success);border:none" href="tel:${esc(g.supervisorPhone)}" aria-label="اتصال بالمشرف">${I('phone')}</a>` : '')}</div>
-    <div class="list" style="padding:0">${rows.map(r => `<div class="li row"><div class="ib sm">${I(r[0])}</div><div class="grow"><div class="muted xs">${r[1]}</div><div style="font-weight:600">${r[2] ? esc(r[2]) : '—'}</div></div></div>`).join('')}</div>
+    <div class="row"><div class="ib">${I('tent')}</div><div class="grow"><h2>بيانات الرحلة</h2><p class="muted sm">${esc(g.name)}</p></div>${forSup ? `<button class="btn soft sm" data-act="tripInfo">${I('edit')}تعديل</button>` : ''}</div>
+    <div class="list" style="padding:0">${rows.map(r => `<div class="li row"><div class="ib sm">${I(r[0])}</div><div class="grow"><div class="muted xs">${r[1]}</div><div style="font-weight:600">${r[2] ? esc(r[2]) : '—'}</div></div>${r[3] || ''}</div>`).join('')}</div>
   </div>`;
 }
 function noticeList(g, max){
@@ -1458,21 +1549,21 @@ function vAWizard(){
     ${field('اسم الحملة', `<input class="in" data-w="cname" value="${esc(S.wiz.cname)}" placeholder="مثال: حملة النور للحج">`)}
     <div class="foot"><button class="btn block" data-act="createCampaign"${S.busy.camp ? ' disabled' : ''}>${S.busy.camp ? spinner() : 'إنشاء الحملة'}</button></div>`;
 }
-const aHeader = title => `<div class="row between" style="margin-bottom:14px">${brand()}<button class="iconbtn" data-act="logout" aria-label="تسجيل الخروج">${I('out')}</button></div><h1 style="margin-bottom:14px">${title}</h1>`;
+const aHeader = title => appBar(`<button class="iconbtn" data-act="logout" aria-label="تسجيل الخروج">${I('out')}</button>`) + `<h1 style="margin-bottom:14px">${title}</h1>`;
 function vADash(){
   const c = S.campaign, trav = travelers();
   const online = trav.filter(isOnline).length, open = S.alerts.filter(a => a.status === 'open');
   return aHeader(esc(c.name)) + `
     ${open.length ? `<div class="card tap row alert" style="background:var(--danger-50);margin-bottom:12px" data-act="gotoAlerts" tabindex="0"><div class="ib danger" style="background:var(--card)">${I('alert')}</div><div class="grow" style="color:var(--danger)"><h2>${open.length} تنبيه مفتوح في الحملة</h2><p class="sm">اضغط للتفاصيل</p></div></div>` : ''}
-    <div class="grid2" style="grid-template-columns:repeat(4,1fr);gap:8px">
-      <div class="legend-c lg-on"><b>${online}</b><span>متصل</span></div>
-      <div class="legend-c lg-off"><b>${trav.length}</b><span>حاج</span></div>
-      <div class="legend-c lg-out"><b>${S.groups.length}</b><span>مجموعة</span></div>
-      <div class="legend-c lg-sos"><b>${open.length}</b><span>تنبيهات</span></div>
+    <div class="statrow" style="grid-template-columns:repeat(4,1fr)">
+      <div><div class="v" style="color:var(--success)">${online}</div><div class="k">متصل</div></div>
+      <div><div class="v">${trav.length}</div><div class="k">حاج</div></div>
+      <div><div class="v">${S.groups.length}</div><div class="k">مجموعة</div></div>
+      <div><div class="v" style="color:${open.length ? 'var(--danger)' : 'var(--muted)'}">${open.length}</div><div class="k">تنبيهات</div></div>
     </div>
     <div class="section-title"><h2>المجموعات</h2></div>
     ${S.groups.length ? `<div class="stack sm">${S.groups.map(g => {
-      const ms = S.members.filter(m => m.groupId === g.id && m.role !== 'supervisor');
+      const ms = S.members.filter(m => m.groupId === g.id && m.role !== 'supervisor' && m.role !== 'admin');
       const on = ms.filter(isOnline).length, al = S.alerts.filter(a => a.status === 'open' && a.groupId === g.id).length;
       const steps = stepsOf(g), cur = steps[g.openIndex || 0];
       return `<div class="card row" style="padding:14px"><div class="ib">${I('users')}</div>
@@ -1519,7 +1610,7 @@ function vACamp(){
 const T_TABS = [['home', 'الرئيسية', 'home'], ['trip', 'رحلتي', 'route'], ['loc', 'موقعي', 'pin'], ['me', 'ملفي', 'user']];
 const S_TABS = [['dash', 'الرئيسية', 'grid'], ['trip', 'الرحلة', 'route'], ['map', 'الخريطة', 'map'], ['alerts', 'البلاغات', 'bell'], ['group', 'المجموعة', 'users']];
 const A_TABS = [['dash', 'الرئيسية', 'grid'], ['map', 'الخريطة', 'map'], ['alerts', 'التنبيهات', 'bell'], ['camp', 'الحملة', 'crown']];
-const splash = () => center(`${brand('xl')}<div style="margin-top:26px;display:grid;place-items:center">${spinner(true)}</div>`);
+const splash = () => center(`${authTop()}<div style="margin-top:22px;display:grid;place-items:center">${spinner(true)}</div>`);
 function render(){
   renderPending = false;
   const v = $('#view'), nav = $('#nav');
